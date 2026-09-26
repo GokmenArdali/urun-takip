@@ -11,7 +11,8 @@
 <meta name="apple-mobile-web-app-title" content="Ürün Takip">
 <title>Ürün Takip</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/png" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,7 +50,9 @@
   header.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top); }
   .bar { max-width: 1320px; margin: 0 auto; height: 64px; padding: 0 40px; display: flex; align-items: center; gap: 28px; }
   @media (max-width: 720px) { .bar { padding: 0 18px; height: 56px; gap: 18px; } }
-  .wordmark { font-size: 13px; font-weight: 600; letter-spacing: .34em; text-transform: uppercase; white-space: nowrap; text-decoration: none; }
+  .wordmark { display: inline-flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; letter-spacing: .34em; text-transform: uppercase; white-space: nowrap; text-decoration: none; }
+  .mark { width: 28px; height: 28px; flex: none; }
+  .auth .mark { width: 56px; height: 56px; display: block; margin: 0 0 26px -6px; }
   .spacer { flex: 1; }
   .nav-btn { font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--text-2); white-space: nowrap; }
   .nav-btn:hover { color: var(--text); }
@@ -218,7 +221,7 @@
 <body>
 <header class="top">
   <div class="bar">
-    <a class="wordmark" href="/">Ürün Takip</a>
+    <a class="wordmark" href="/"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-14 50 52)" fill="none" stroke="currentColor"><path d="M50 4 C47 10 47 16 50 22" stroke-width="3" stroke-linecap="round"/><path d="M33 30 L50 18 L67 30 L67 88 L33 88 Z" stroke-width="4"/><circle cx="50" cy="29" r="2.8" stroke-width="3"/><text x="50" y="74" text-anchor="middle" font-family="'Bodoni Moda', Didot, serif" font-weight="500" font-size="30" fill="currentColor" stroke="none">Ü</text></g></svg><span>Ürün Takip</span></a>
     <div class="spacer"></div>
     <span class="status hidden" id="status"></span>
     <button class="nav-btn" id="theme" type="button"></button>
@@ -248,6 +251,7 @@
   <!-- Giriş -->
   <section class="center hidden" id="login">
     <div class="auth">
+      <svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-14 50 52)" fill="none" stroke="currentColor"><path d="M50 4 C47 10 47 16 50 22" stroke-width="3" stroke-linecap="round"/><path d="M33 30 L50 18 L67 30 L67 88 L33 88 Z" stroke-width="4"/><circle cx="50" cy="29" r="2.8" stroke-width="3"/><text x="50" y="74" text-anchor="middle" font-family="'Bodoni Moda', Didot, serif" font-weight="500" font-size="30" fill="currentColor" stroke="none">Ü</text></g></svg>
       <div class="label">Özel panel</div>
       <h1 class="serif" style="margin-top:14px">Hoş geldin.</h1>
       <p>Takip listesine girmek için panel şifresini yaz.</p>
@@ -262,6 +266,7 @@
   <!-- Bilgiler -->
   <section class="center hidden" id="profile">
     <div class="auth">
+      <svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-14 50 52)" fill="none" stroke="currentColor"><path d="M50 4 C47 10 47 16 50 22" stroke-width="3" stroke-linecap="round"/><path d="M33 30 L50 18 L67 30 L67 88 L33 88 Z" stroke-width="4"/><circle cx="50" cy="29" r="2.8" stroke-width="3"/><text x="50" y="74" text-anchor="middle" font-family="'Bodoni Moda', Didot, serif" font-weight="500" font-size="30" fill="currentColor" stroke="none">Ü</text></g></svg>
       <div class="label">Hesap</div>
       <h1 class="serif" style="margin-top:14px">Seni tanıyalım.</h1>
       <p>Bildirimlerin nereye geleceğini seç. Bu bilgiler yalnızca bu cihazda saklanır.</p>

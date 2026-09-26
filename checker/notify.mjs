@@ -248,7 +248,7 @@ export function emailHtml(messages) {
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="bg" style="background:#f4f2ed"><tr><td align="center" style="padding:28px 14px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-    <tr><td style="padding:0 6px 18px"><span class="brand" style="font:400 24px ${SERIF};color:#9a7a45">Ürün Takip</span></td></tr>
+    <tr><td style="padding:0 6px 18px">${base.startsWith('https://') ? `<img src="${esc(base)}/mark-96.png" width="30" height="30" alt="" style="vertical-align:middle;margin-right:8px">` : ''}<span class="brand" style="font:400 24px ${SERIF};color:#9a7a45;vertical-align:middle">Ürün Takip</span></td></tr>
     ${messages.map(cardHtml).join('')}
     <tr><td class="muted" style="padding:6px 6px 0;font:12px/1.6 ${SANS};color:#8e8b84">
       ${base ? `Takip listeni <a href="${esc(base)}" class="muted" style="color:#8e8b84">panelden</a> yönetebilirsin.` : ''}

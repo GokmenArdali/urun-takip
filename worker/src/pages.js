@@ -20,7 +20,7 @@ export function linkPage({ title, message, product, button, danger, done }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>${esc(title)} · Ürün Takip</title>
-<link rel="icon" type="image/png" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
@@ -31,7 +31,8 @@ export function linkPage({ title, message, product, button, danger, done }) {
   * { box-sizing: border-box; }
   body { margin:0; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--text); font:15px/1.5 "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing:antialiased; }
   header { height:64px; display:flex; align-items:center; justify-content:center; border-bottom:1px solid var(--line); }
-  .wordmark { font-size:13px; font-weight:600; letter-spacing:.34em; text-transform:uppercase; color:inherit; text-decoration:none; }
+  .wordmark { display:inline-flex; align-items:center; gap:12px; font-size:13px; font-weight:600; letter-spacing:.34em; text-transform:uppercase; color:inherit; text-decoration:none; }
+  .mark { width:28px; height:28px; }
   main { flex:1; display:grid; place-items:center; padding:48px 18px; }
   .box { width:100%; max-width:400px; }
   .label { font-size:11px; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
@@ -46,7 +47,7 @@ export function linkPage({ title, message, product, button, danger, done }) {
 </style>
 </head>
 <body>
-<header><a class="wordmark" href="/">Ürün Takip</a></header>
+<header><a class="wordmark" href="/"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-14 50 52)" fill="none" stroke="currentColor"><path d="M50 4 C47 10 47 16 50 22" stroke-width="3" stroke-linecap="round"/><path d="M33 30 L50 18 L67 30 L67 88 L33 88 Z" stroke-width="4"/><circle cx="50" cy="29" r="2.8" stroke-width="3"/><text x="50" y="74" text-anchor="middle" font-family="'Bodoni Moda', Didot, serif" font-weight="500" font-size="30" fill="currentColor" stroke="none">Ü</text></g></svg><span>Ürün Takip</span></a></header>
 <main>
   <div class="box">
     <div class="label">${done ? 'Tamamlandı' : 'Onay'}</div>
