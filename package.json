@@ -1,0 +1,16 @@
+{
+  "name": "urun-takip",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node test.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Fiyat ve stok takip botu",
+  "dependencies": {
+    "playwright": "^1.63.0"
+  },
+  "private": true,
+  "type": "module"
+}
