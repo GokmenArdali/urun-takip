@@ -1,0 +1,21 @@
+name = "urun-takip"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "urun-takip"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+# Her 5 dakikada bir, kontrol zamanı gelen ürün varsa GitHub'daki kontrol programını çalıştırır
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+GITHUB_REPO = "GokmenArdali/urun-takip"
+GITHUB_WORKFLOW = "kontrol.yml"
+
+# Gizli değerler burada yazılmaz; "Paneli yükle" iş akışı GitHub Secrets'tan alıp Cloudflare'e yükler:
+#   PANEL_PASSWORD  panele giriş şifresi
+#   API_TOKEN       kontrol programıyla paylaşılan anahtar (GitHub'da da aynısı)
+#   DISPATCH_TOKEN  kontrol programını başlatmak için GitHub erişim anahtarı

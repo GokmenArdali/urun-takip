@@ -1,16 +1,15 @@
 {
   "name": "urun-takip",
   "version": "1.0.0",
-  "scripts": {
-    "test": "node test.mjs"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "Fiyat ve stok takip botu",
-  "dependencies": {
-    "playwright": "^1.63.0"
-  },
   "private": true,
-  "type": "module"
+  "description": "Fiyat ve stok takip botu",
+  "type": "module",
+  "scripts": {
+    "kontrol": "node checker/index.mjs",
+    "test": "node --test checker/*.test.mjs"
+  },
+  "dependencies": {
+    "nodemailer": "^10.0.10",
+    "playwright": "^1.63.0"
+  }
 }

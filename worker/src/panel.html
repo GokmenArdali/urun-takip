@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ürün Takip</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
+<style>
+  :root {
+    --bg: #f6f6f4; --card: #ffffff; --text: #1b1b1b; --muted: #6b6b6b; --line: #e4e4e0;
+    --accent: #1b1b1b; --accent-text: #ffffff; --ok: #1f8a4c; --ok-bg: #e5f5ec; --no: #8a8a8a; --no-bg: #efefec;
+    --warn: #a15c00; --warn-bg: #fff3dd; --err: #b3261e; --err-bg: #fde8e6; --ring: #3b82f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212; --card: #1c1c1c; --text: #ececec; --muted: #9a9a9a; --line: #2e2e2e;
+      --accent: #ececec; --accent-text: #121212; --ok: #4ade80; --ok-bg: #14301f; --no: #8a8a8a; --no-bg: #262626;
+      --warn: #fbbf24; --warn-bg: #33270d; --err: #f87171; --err-bg: #3a1614;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 22px; margin: 0; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input[type=text], input[type=email], input[type=password], input[type=url] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--bg); color: var(--text); font: inherit;
+  }
+  input:focus { outline: 2px solid var(--ring); outline-offset: -1px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+  button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); padding: 9px 14px; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button.link { border: none; background: none; padding: 0; color: var(--muted); text-decoration: underline; font-size: 13px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--text); font-size: 14px; }
+  .actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+  .msg { font-size: 14px; }
+  .msg.err { color: var(--err); }
+  .msg.ok { color: var(--ok); }
+  .banner { border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: 14px; background: var(--warn-bg); color: var(--warn); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tabs button { border-radius: 999px; padding: 6px 12px; font-size: 14px; }
+  .tabs button.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .item { border-top: 1px solid var(--line); padding: 14px 0; }
+  .item:first-child { border-top: none; padding-top: 0; }
+  .item-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .item-title { font-weight: 600; word-break: break-word; }
+  .item-title a { color: inherit; text-decoration: none; }
+  .item-title a:hover { text-decoration: underline; }
+  .meta { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .price { font-weight: 600; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { font-size: 12.5px; padding: 3px 9px; border-radius: 999px; background: var(--no-bg); color: var(--no); border: 1.5px solid transparent; }
+  .chip.in { background: var(--ok-bg); color: var(--ok); }
+  .chip.want { border-color: currentColor; font-weight: 600; }
+  .chip.missing { background: var(--err-bg); color: var(--err); }
+  .err-line { color: var(--err); font-size: 13px; margin-top: 6px; }
+  .tag { font-size: 12px; padding: 1px 7px; border-radius: 6px; background: var(--no-bg); color: var(--muted); margin-left: 6px; font-weight: 500; }
+  .tag.fast { background: var(--warn-bg); color: var(--warn); }
+  .empty { color: var(--muted); text-align: center; padding: 18px 0; }
+  .hidden { display: none !important; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 10px; }
+  details p { font-size: 13px; color: var(--muted); margin: 6px 0; }
+  code { background: var(--no-bg); padding: 1px 5px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>🏷️ Ürün Takip</h1>
+    <button class="link hidden" id="logout">Çıkış</button>
+  </div>
+
+  <!-- Giriş -->
+  <section class="card hidden" id="login">
+    <h2>Giriş</h2>
+    <form id="login-form">
+      <label for="password">Panel şifresi</label>
+      <input type="password" id="password" autocomplete="current-password" required>
+      <div class="actions">
+        <button class="primary" type="submit">Giriş yap</button>
+        <span class="msg err" id="login-msg"></span>
+      </div>
+    </form>
+  </section>
+
+  <div id="app" class="hidden">
+    <div class="banner hidden" id="banner"></div>
+
+    <!-- Profil -->
+    <section class="card" id="profile">
+      <h2>Bilgilerin</h2>
+      <div id="profile-view" class="hidden">
+        <div id="profile-summary"></div>
+        <div class="actions"><button class="link" id="profile-edit">Değiştir</button></div>
+      </div>
+      <form id="profile-form">
+        <p class="muted" style="margin:0">Bildirimler buraya gelecek. Bu bilgiler sadece bu tarayıcıda saklanır.</p>
+        <div class="row">
+          <div>
+            <label for="owner">Adın</label>
+            <input type="text" id="owner" maxlength="40" required>
+          </div>
+          <div>
+            <label for="email">E-posta</label>
+            <input type="email" id="email" maxlength="120" placeholder="ornek@gmail.com">
+          </div>
+        </div>
+        <label for="ntfy">ntfy konusu (isteğe bağlı, telefona anında bildirim için)</label>
+        <input type="text" id="ntfy" maxlength="64" placeholder="boş bırakabilirsin">
+        <details>
+          <summary>ntfy nedir, nasıl kurulur?</summary>
+          <p>ntfy, hesap açmadan telefona bildirim gönderen ücretsiz bir uygulama. E-postadan daha hızlı haber alırsın.</p>
+          <p>1. Aşağıdaki butonla sana özel bir konu adı oluştur. 2. Telefona <b>ntfy</b> uygulamasını kur (App Store / Google Play). 3. Uygulamada <b>+</b>'ya bas ve bu konu adını yaz.</p>
+          <p>Konu adını bilen herkes bildirimlerini görebilir, o yüzden tahmin edilemez bir ad kullan.</p>
+          <button type="button" id="ntfy-gen">Rastgele konu adı oluştur</button>
+        </details>
+        <div class="actions">
+          <button class="primary" type="submit">Kaydet</button>
+          <span class="msg err" id="profile-msg"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Ürün ekle -->
+    <section class="card" id="add">
+      <h2>Ürün ekle</h2>
+      <form id="add-form">
+        <label for="url">Ürün linki</label>
+        <input type="url" id="url" required placeholder="https://www.zara.com/tr/tr/...">
+        <div class="row">
+          <div>
+            <label for="sizes">Beden(ler)</label>
+            <input type="text" id="sizes" placeholder="ör. M veya M, L — boşsa tüm bedenler">
+          </div>
+          <div>
+            <label for="target">Hedef fiyat (TL, isteğe bağlı)</label>
+            <input type="text" id="target" inputmode="decimal" placeholder="ör. 1500">
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="fast"> Hızlı takip (5 dakikada bir kontrol, kapışılan ürünler için)</label>
+        <p class="muted" style="margin:8px 0 0">
+          Hedef fiyat girersen sadece fiyat o tutarın altına inince haber verilir; boşsa her indirimde haber verilir.
+          Beden takibi: Zara, Pull&amp;Bear, Bershka, Stradivarius, Massimo Dutti, Oysho, Trendyol, Hepsiburada, FashFed.
+          Diğer sitelerde sadece fiyat ve genel stok takip edilir.
+        </p>
+        <div class="actions">
+          <button class="primary" type="submit" id="add-btn">Takibe al</button>
+          <span class="msg" id="add-msg"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Liste -->
+    <section class="card">
+      <div class="tabs">
+        <button type="button" data-tab="mine" class="on">Benim takiplerim</button>
+        <button type="button" data-tab="all">Herkes</button>
+      </div>
+      <div id="list"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+let profile = store.get('profile') || {};
+let tab = store.get('tab') || 'mine';
+let watches = [];
+let statusInfo = null;
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const tl = (n) => n == null ? '' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(n);
+const norm = (s) => {
+  const x = String(s ?? '').toLocaleUpperCase('tr-TR').replace(/\(.*?\)/g, ' ').replace(/,/g, '.').replace(/\s+/g, ' ').trim();
+  return ({ XXL: '2XL', XXXL: '3XL', XXXXL: '4XL', 'TEK EBAT': 'STANDART', 'TEK BEDEN': 'STANDART', STD: 'STANDART' })[x] || x;
+};
+function ago(ms) {
+  if (!ms) return 'henüz kontrol edilmedi';
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 1) return 'az önce';
+  if (m < 60) return `${m} dk önce`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `${h} saat önce` : `${Math.round(h / 24)} gün önce`;
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    method: opts.method || 'GET',
+    headers: opts.body ? { 'content-type': 'application/json' } : {},
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && !opts.allow401) { showLogin(); throw new Error(data.error || 'Giriş yapmalısın'); }
+  if (!res.ok) throw new Error(data.error || `Hata (${res.status})`);
+  return data;
+}
+
+function contactQuery() {
+  const p = new URLSearchParams();
+  if (profile.email) p.set('email', profile.email);
+  if (profile.ntfy) p.set('ntfy', profile.ntfy);
+  return p.toString();
+}
+
+// ---------- Giriş ----------
+function showLogin() {
+  $('login').classList.remove('hidden');
+  $('app').classList.add('hidden');
+  $('logout').classList.add('hidden');
+}
+function showApp() {
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('logout').classList.remove('hidden');
+}
+$('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('login-msg').textContent = '';
+  try {
+    await api('/api/login', { method: 'POST', body: { password: $('password').value }, allow401: true });
+    $('password').value = '';
+    showApp();
+    renderProfile();
+    refresh();
+  } catch (err) { $('login-msg').textContent = err.message; }
+});
+$('logout').addEventListener('click', async () => {
+  await api('/api/logout', { method: 'POST', body: {} }).catch(() => {});
+  showLogin();
+});
+
+// ---------- Profil ----------
+function renderProfile() {
+  const has = profile.owner && (profile.email || profile.ntfy);
+  $('profile-form').classList.toggle('hidden', !!has);
+  $('profile-view').classList.toggle('hidden', !has);
+  $('add').classList.toggle('hidden', !has);
+  $('owner').value = profile.owner || '';
+  $('email').value = profile.email || '';
+  $('ntfy').value = profile.ntfy || '';
+  if (has) {
+    const parts = [profile.email && `📧 ${esc(profile.email)}`, profile.ntfy && `🔔 ntfy: <code>${esc(profile.ntfy)}</code>`].filter(Boolean);
+    $('profile-summary').innerHTML = `<b>${esc(profile.owner)}</b><div class="muted">${parts.join(' · ')}</div>`;
+  }
+}
+$('profile-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const next = { owner: $('owner').value.trim(), email: $('email').value.trim().toLowerCase(), ntfy: $('ntfy').value.trim() };
+  if (!next.email && !next.ntfy) { $('profile-msg').textContent = 'E-posta ya da ntfy konusundan en az birini gir.'; return; }
+  if (next.ntfy && !/^[A-Za-z0-9_-]{6,64}$/.test(next.ntfy)) { $('profile-msg').textContent = 'ntfy konusu en az 6 karakter olmalı; sadece harf, rakam, - ve _.'; return; }
+  $('profile-msg').textContent = '';
+  profile = next;
+  store.set('profile', profile);
+  renderProfile();
+  refresh();
+});
+$('profile-edit').addEventListener('click', () => {
+  $('profile-form').classList.remove('hidden');
+  $('profile-view').classList.add('hidden');
+});
+$('ntfy-gen').addEventListener('click', () => {
+  const rand = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 10);
+  const base = ($('owner').value || 'takip').toLocaleLowerCase('tr-TR').replace(/[^a-z0-9]/g, '').slice(0, 12) || 'takip';
+  $('ntfy').value = `urun-${base}-${rand}`;
+});
+
+// ---------- Ürün ekleme ----------
+$('add-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = $('add-msg');
+  msg.className = 'msg';
+  msg.textContent = 'Ekleniyor…';
+  $('add-btn').disabled = true;
+  try {
+    await api('/api/watches', {
+      method: 'POST',
+      body: {
+        url: $('url').value, sizes: $('sizes').value, target_price: $('target').value, fast: $('fast').checked,
+        owner: profile.owner, email: profile.email, ntfy: profile.ntfy,
+      },
+    });
+    $('add-form').reset();
+    msg.className = 'msg ok';
+    msg.textContent = 'Eklendi! Birkaç dakika içinde ilk kontrol yapılıp sana "Takip başladı" bildirimi gelecek.';
+    tab = 'mine'; store.set('tab', tab);
+    refresh();
+  } catch (err) {
+    msg.className = 'msg err';
+    msg.textContent = err.message;
+  } finally {
+    $('add-btn').disabled = false;
+  }
+});
+
+// ---------- Liste ----------
+document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => {
+  tab = b.dataset.tab; store.set('tab', tab); renderList();
+}));
+
+function sizeChips(w) {
+  const sizes = w.product_sizes;
+  const wanted = w.sizes.map(norm);
+  if (!sizes) {
+    return w.sizes.length ? w.sizes.map((s) => `<span class="chip want">${esc(s)}</span>`).join('') : '';
+  }
+  const chips = sizes.map((s) => {
+    const isWanted = wanted.includes(norm(s.name));
+    return `<span class="chip ${s.available ? 'in' : ''} ${isWanted ? 'want' : ''}" title="${s.available ? 'Stokta' : 'Stokta yok'}">${esc(s.name)}</span>`;
+  });
+  const missing = w.sizes.filter((s) => !sizes.some((x) => norm(x.name) === norm(s)));
+  for (const m of missing) chips.push(`<span class="chip missing want" title="Üründe bu beden görünmüyor">${esc(m)}?</span>`);
+  return chips.join('');
+}
+
+function renderList() {
+  document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  const items = tab === 'mine' ? watches.filter((w) => w.mine) : watches;
+  if (!items.length) {
+    $('list').innerHTML = `<div class="empty">${tab === 'mine' ? 'Henüz takip ettiğin ürün yok.' : 'Henüz kimse ürün eklemedi.'}</div>`;
+    return;
+  }
+  $('list').innerHTML = items.map((w) => {
+    const title = w.title ? `${w.title}${w.color ? ` · ${w.color}` : ''}` : w.url;
+    const wantText = w.sizes.length ? `Beden: ${w.sizes.join(', ')}` : 'Tüm bedenler';
+    const parts = [
+      esc(w.site),
+      tab === 'all' ? esc(w.owner) : null,
+      wantText,
+      w.target_price ? `Hedef: ${tl(w.target_price)}` : null,
+      ago(w.last_checked),
+    ].filter(Boolean);
+    const error = w.fail_count > 0 && w.last_error ? `<div class="err-line">⚠️ Son kontrol başarısız: ${esc(w.last_error)}</div>` : '';
+    return `<div class="item">
+      <div class="item-head">
+        <div>
+          <div class="item-title"><a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(title)}</a>${w.fast ? '<span class="tag fast">hızlı</span>' : ''}</div>
+          <div class="meta">${parts.join(' · ')}</div>
+        </div>
+        <div class="price">${tl(w.price)}</div>
+      </div>
+      <div class="chips">${sizeChips(w)}</div>
+      ${error}
+      ${w.mine ? `<div class="actions"><button class="link" data-del="${w.id}">Takibi bırak</button></div>` : ''}
+    </div>`;
+  }).join('');
+  document.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => removeWatch(Number(b.dataset.del))));
+}
+
+async function removeWatch(id) {
+  if (!confirm('Bu ürünün takibini bırakmak istiyor musun?')) return;
+  try {
+    await api(`/api/watches/${id}?${contactQuery()}`, { method: 'DELETE' });
+    refresh();
+  } catch (err) { alert(err.message); }
+}
+
+function renderBanner() {
+  const b = $('banner');
+  const s = statusInfo;
+  let text = '';
+  if (s?.dispatchError) text = `Kontrol programı başlatılamıyor: ${s.dispatchError}`;
+  else if (watches.length && s?.lastRun && Date.now() - s.lastRun > 30 * 60000) text = `Son kontrol ${ago(s.lastRun)} yapıldı, kontroller aksıyor olabilir.`;
+  b.textContent = text;
+  b.classList.toggle('hidden', !text);
+}
+
+async function refresh() {
+  try {
+    const [list, status] = await Promise.all([api(`/api/watches?${contactQuery()}`), api('/api/status')]);
+    watches = list.watches;
+    statusInfo = status;
+    showApp();
+    renderList();
+    renderBanner();
+  } catch {}
+}
+
+renderProfile();
+refresh();
+setInterval(() => { if (!document.hidden && !$('app').classList.contains('hidden')) refresh(); }, 60000);
+</script>
+</body>
+</html>

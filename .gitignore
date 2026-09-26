@@ -430,3 +430,8 @@ FodyWeavers.xsd
 
 # Ürün takip: yerel test çıktıları
 results/local-*/
+
+# Yerel geliştirme dosyaları
+.yerel/
+worker/.wrangler/
+worker/.dev.vars

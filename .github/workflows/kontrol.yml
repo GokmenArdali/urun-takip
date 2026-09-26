@@ -1,0 +1,41 @@
+name: Kontrol
+
+# Cloudflare'deki zamanlayıcı 5 dakikada bir, kontrol zamanı gelen ürün varsa bunu başlatır.
+# Saatlik zamanlama sadece yedek: Cloudflare tarafı bir sebeple başlatamazsa kontroller tamamen durmasın.
+on:
+  workflow_dispatch:
+    inputs:
+      hepsi:
+        description: 'Zamanı gelmemiş olanlar dahil tüm ürünleri kontrol et'
+        type: boolean
+        default: false
+  schedule:
+    - cron: '7 * * * *'
+
+concurrency:
+  group: kontrol
+  cancel-in-progress: false
+
+jobs:
+  kontrol:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Sanal ekran
+        run: command -v xvfb-run || (sudo apt-get update -qq && sudo apt-get install -y -qq xvfb)
+      - name: Ürünleri kontrol et
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          PANEL_URL: ${{ secrets.API_URL }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          CHECK_ALL: ${{ inputs.hepsi && '1' || '0' }}
+        # Zara ve Inditex siteleri görünmez tarayıcıyı engelliyor, sanal ekranda gerçek Chrome açıyoruz
+        run: xvfb-run --auto-servernum npm run kontrol
