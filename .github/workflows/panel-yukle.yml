@@ -19,10 +19,16 @@ jobs:
     defaults:
       run:
         working-directory: worker
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
+      - name: Cloudflare anahtarını hazırla
+        env:
+          RAW: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        # Yapıştırırken araya giren boşluk/satır sonlarını temizle
+        run: |
+          T=$(printf '%s' "$RAW" | tr -d '[:space:]')
+          if [ -z "$T" ]; then echo "CLOUDFLARE_API_TOKEN GitHub Secrets içinde yok"; exit 1; fi
+          echo "::add-mask::$T"
+          echo "CLOUDFLARE_API_TOKEN=$T" >> "$GITHUB_ENV"
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
@@ -48,6 +54,6 @@ jobs:
           API_TOKEN: ${{ secrets.API_TOKEN }}
           DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
         run: |
-          node -e 'const s={};for(const k of ["PANEL_PASSWORD","API_TOKEN","DISPATCH_TOKEN"]){if(!process.env[k])throw new Error(k+" GitHub Secrets içinde yok");s[k]=process.env[k]}require("fs").writeFileSync("/tmp/gizli.json",JSON.stringify(s))'
+          node -e 'const s={};for(const k of ["PANEL_PASSWORD","API_TOKEN","DISPATCH_TOKEN"]){if(!process.env[k])throw new Error(k+" GitHub Secrets içinde yok");s[k]=process.env[k].trim()}require("fs").writeFileSync("/tmp/gizli.json",JSON.stringify(s))'
           npx wrangler secret bulk /tmp/gizli.json
           rm -f /tmp/gizli.json

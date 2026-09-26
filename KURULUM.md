@@ -17,7 +17,7 @@ Tamamen ücretsiz servislerle çalışır, bilgisayarının açık olması gerek
 
 ### 1. Cloudflare
 1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages**. İlk kez giriyorsan senden bir `workers.dev` alt alan adı seçmeni ister (ör. `gokmen`). Seç ve kaydet.
-2. Aynı sayfanın sağ tarafındaki **Account ID** değerini kopyala → bu `CLOUDFLARE_ACCOUNT_ID`.
+2. **Account ID**: Workers & Pages → Account details kısmında yazar. Gizli bir bilgi değil, `worker/wrangler.toml` içindeki `account_id` satırına yazılır (bu projede yazılı).
 3. Sağ üstte profil → **My Profile** → **API Tokens** → **Create Token** → **Edit Cloudflare Workers** şablonunu seç (**Use template**).
    - **Permissions** listesine **+ Add more** ile `Account` · `D1` · `Edit` satırını ekle.
    - **Account Resources**: kendi hesabın. **Zone Resources**: All zones.
@@ -45,7 +45,6 @@ GitHub'da `urun-takip` projesi → **Settings** → **Secrets and variables** �
 | Name | Değer |
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | 1. adımdaki token |
-| `CLOUDFLARE_ACCOUNT_ID` | 1. adımdaki Account ID |
 | `DISPATCH_TOKEN` | 2. adımdaki GitHub token |
 | `API_TOKEN` | 3. adımdaki rastgele anahtar |
 | `PANEL_PASSWORD` | Panele giriş şifresi (arkadaşlarınla paylaşacağın) |

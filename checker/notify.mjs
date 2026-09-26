@@ -111,14 +111,15 @@ export function createOutbox({ dryRun = false } = {}) {
       }
 
       if (emails.size) {
+        const user = (process.env.GMAIL_USER ?? '').trim();
         const transport = nodemailer.createTransport({
           service: 'gmail',
-          auth: { user: process.env.GMAIL_USER, pass: (process.env.GMAIL_APP_PASSWORD ?? '').replace(/\s+/g, '') },
+          auth: { user, pass: (process.env.GMAIL_APP_PASSWORD ?? '').replace(/\s+/g, '') },
         });
         for (const [to, list] of emails) {
           try {
             await transport.sendMail({
-              from: `Ürün Takip <${process.env.GMAIL_USER}>`,
+              from: `Ürün Takip <${user}>`,
               to,
               subject: list.length === 1 ? list[0].subject : `${list.length} yeni bildirim: ${list[0].subject}`,
               text: list.map((m) => `${m.subject}\n${m.lines.join('\n')}\n${m.url}`).join('\n\n'),

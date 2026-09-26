@@ -6,8 +6,9 @@ import { createOutbox } from './notify.mjs';
 import { evaluate, evaluateFailure } from './rules.mjs';
 import { adapterFor, checkProduct } from './sites/index.mjs';
 
-const API_URL = (process.env.API_URL ?? '').replace(/\/$/, '');
-const API_TOKEN = process.env.API_TOKEN;
+// Secrets yapıştırılırken araya giren boşluk/satır sonları temizlenir
+const API_URL = (process.env.API_URL ?? '').trim().replace(/\/$/, '');
+const API_TOKEN = (process.env.API_TOKEN ?? '').trim();
 const CONCURRENCY = Number(process.env.CONCURRENCY || 3);
 const PRODUCT_TIMEOUT_MS = 75_000;
 // Bir çalıştırma çok uzarsa yeni ürün başlatma; kalanlar sonraki çalıştırmada
