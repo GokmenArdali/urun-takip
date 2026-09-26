@@ -20,6 +20,7 @@ jobs:
       run:
         working-directory: worker
     steps:
+      - uses: actions/checkout@v5
       - name: Cloudflare anahtarını hazırla
         env:
           RAW: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -29,7 +30,6 @@ jobs:
           if [ -z "$T" ]; then echo "CLOUDFLARE_API_TOKEN GitHub Secrets içinde yok"; exit 1; fi
           echo "::add-mask::$T"
           echo "CLOUDFLARE_API_TOKEN=$T" >> "$GITHUB_ENV"
-      - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
