@@ -1,0 +1,57 @@
+[
+  {
+    "site": "zara",
+    "mode": "headed",
+    "channel": "chrome",
+    "httpStatus": 200,
+    "error": null,
+    "seconds": 18,
+    "title": "TEKNİK RELAXED FIT CEKET - Siyah | ZARA Türkiye / Turkey",
+    "htmlLength": 1031810,
+    "looksBlocked": false,
+    "jsonLdCount": 1,
+    "hasZaraPayload": true,
+    "jsonCaptures": [
+      "200 https://www.zara.com/api/storefront/1/stores/11766/products/id/552913139/availability",
+      "200 https://www.zara.com/api/storefront/1/stores/11766/products/id/552913140/availability",
+      "200 https://www.zara.com/itxrest/1/catalog/store/11766/placement/complete_look/personalization?locale=tr_TR&channel=web&productIds=552913140",
+      "200 https://www.zara.com/itxrest/3/returns/store/11766/product/552913140/sizing-info?locale=tr_TR&clientId=cd208124-e395-4429-accc-5e6cd884a557"
+    ]
+  },
+  {
+    "site": "pullandbear",
+    "mode": "headed",
+    "channel": "chrome",
+    "httpStatus": 200,
+    "error": null,
+    "seconds": 16,
+    "title": "Kapüşonlu hafif yağmurluk | Pull&Bear Turkey / Türkiye",
+    "htmlLength": 696837,
+    "looksBlocked": false,
+    "jsonLdCount": 1,
+    "hasZaraPayload": false,
+    "jsonCaptures": [
+      "200 https://www.pullandbear.com/itxrest/2/oam/store/25009521/xconfiguracion?languageId=-43&variable=FULL_ADDRESS_MASK&variable=REST_STOCK_PRODUCT_PHSTORE_URL&variab",
+      "200 https://www.pullandbear.com/itxrest/2/catalog/store/25009521/20309459/category/0/product/748862861/detail?languageId=-43&appId=1",
+      "203 https://www.pullandbear.com/itxrest/2/returns/store/25009521/product/748862861/sizing-info?languageId=-43&locale=tr_TR&appId=1",
+      "200 https://www.pullandbear.com/itxrest/1/catalog/store/25009521/placement/complete_look/personalization?storeId=25009521&languageId=-43&recommendationModel=yoda&pr"
+    ]
+  },
+  {
+    "site": "fashfed",
+    "mode": "headed",
+    "channel": "chrome",
+    "httpStatus": 200,
+    "error": null,
+    "seconds": 16,
+    "title": "Calvin Klein Cotton Nylon Varisty Bomber Erkek Siyah Ceket LV04RD400G-UB1 | FashFed",
+    "htmlLength": 2072938,
+    "looksBlocked": false,
+    "jsonLdCount": 4,
+    "hasZaraPayload": false,
+    "jsonCaptures": [
+      "200 https://www.fashfed.com/api/client/widgets/pznext-preserve-product-image/",
+      "200 https://recommender.scarabresearch.com/merchants/1092412B42CDFC50/?pv=2126603092&xp=1&v=i%3Ag%252FLV04RD400G.UB1&cv=1&ca=&cp=1&ta=%7B%22name%22%3A%22product_seg"
+    ]
+  }
+]

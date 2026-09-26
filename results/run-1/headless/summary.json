@@ -1,0 +1,47 @@
+[
+  {
+    "site": "zara",
+    "mode": "headless",
+    "channel": "chromium",
+    "httpStatus": 403,
+    "error": null,
+    "seconds": 15,
+    "title": "Access Denied",
+    "htmlLength": 336,
+    "looksBlocked": true,
+    "jsonLdCount": 0,
+    "hasZaraPayload": false,
+    "jsonCaptures": []
+  },
+  {
+    "site": "pullandbear",
+    "mode": "headless",
+    "channel": "chromium",
+    "httpStatus": 403,
+    "error": null,
+    "seconds": 16,
+    "title": "Access Denied",
+    "htmlLength": 336,
+    "looksBlocked": true,
+    "jsonLdCount": 0,
+    "hasZaraPayload": false,
+    "jsonCaptures": []
+  },
+  {
+    "site": "fashfed",
+    "mode": "headless",
+    "channel": "chromium",
+    "httpStatus": 200,
+    "error": null,
+    "seconds": 18,
+    "title": "Calvin Klein Cotton Nylon Varisty Bomber Erkek Siyah Ceket LV04RD400G-UB1 | FashFed",
+    "htmlLength": 2071997,
+    "looksBlocked": false,
+    "jsonLdCount": 4,
+    "hasZaraPayload": false,
+    "jsonCaptures": [
+      "200 https://www.fashfed.com/api/client/widgets/pznext-preserve-product-image/",
+      "200 https://recommender.scarabresearch.com/merchants/1092412B42CDFC50/?pv=1739854943&xp=1&v=i%3Ag%252FLV04RD400G.UB1&cv=1&ca=&cp=1&ta=%7B%22name%22%3A%22product_seg"
+    ]
+  }
+]
