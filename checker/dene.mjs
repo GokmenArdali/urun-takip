@@ -13,6 +13,7 @@ for (const url of args.filter((a) => !a.startsWith('--'))) {
     console.log(`[${adapterFor(url).name}] ${data.title}${data.color ? ` (${data.color})` : ''}`);
     console.log(`   ${data.price} TL${data.listPrice ? ` (önce ${data.listPrice})` : ''} | ${sizes} | ${((Date.now() - started) / 1000).toFixed(1)} sn`);
     console.log(`   resim: ${data.image ? data.image.slice(0, 90) : 'YOK'}`);
+    if (data.colors) console.log(`   renkler: ${data.colors.map((c) => `${c.current ? '*' : ''}${c.name} [${c.sizes.filter((s) => s.available).map((s) => s.name).join(',')}]`).join(' · ')}`);
     if (data.stores) console.log(`   mağazalar: ${data.stores.map((s) => `${s.name} [${s.sizes.map((z) => z.name).join(',')}]`).join(' · ') || 'hiçbirinde yok'}`);
   } catch (e) {
     console.log(`[${adapterFor(url).name}] HATA: ${e.message} | ${url}`);

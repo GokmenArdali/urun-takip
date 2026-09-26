@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "nodemailer": "^10.0.10",
-    "playwright": "^1.63.0"
+    "playwright": "^1.63.0",
+    "web-push": "^3.6.7"
   }
 }

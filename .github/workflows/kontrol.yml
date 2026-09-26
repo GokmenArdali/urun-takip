@@ -37,6 +37,7 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           CHECK_ALL: ${{ inputs.hepsi && '1' || '0' }}
         # Zara ve Inditex siteleri görünmez tarayıcıyı engelliyor, sanal ekranda gerçek Chrome açıyoruz
         run: xvfb-run --auto-servernum npm run kontrol

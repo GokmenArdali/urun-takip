@@ -13,6 +13,26 @@ const BRANDS = {
 const SIZE_TYPES = { short: 'Kısa boy', long: 'Uzun boy', petite: 'Petite', tall: 'Tall' };
 const DETAIL = /\/itxrest\/2\/catalog\/store\/\d+\/\d+\/category\/0\/product\/(\d+)\/detail/;
 
+// Bazı ürünlerde (ör. Stradivarius jean) aynı ailedeki başka modellerin bedenleri de geliyor;
+// parça numarası rengin referansıyla başlayanlar bu ürüne ait
+function sizesOf(color) {
+  const ref = color.reference?.replace(/^C/, '').replace(/-.*$/, '');
+  const own = ref ? (color.sizes ?? []).filter((s) => s.partnumber?.startsWith(ref)) : [];
+  const bySize = new Map();
+  for (const s of own.length ? own : (color.sizes ?? [])) {
+    const name = s.name + (SIZE_TYPES[s.sizeType] ? ` ${SIZE_TYPES[s.sizeType]}` : '');
+    const size = {
+      name,
+      // SHOW = stokta, SOLD_OUT = tükendi, COMING_SOON = yakında
+      available: s.visibilityValue === 'SHOW',
+      price: Number(s.price) / 100,
+    };
+    const seen = bySize.get(name);
+    bySize.set(name, seen ? { ...seen, available: seen.available || size.available } : size);
+  }
+  return [...bySize.values()];
+}
+
 const brandOf = (host) => Object.entries(BRANDS).find(([domain]) => host === domain || host.endsWith(`.${domain}`))?.[1];
 
 export default {
@@ -45,24 +65,8 @@ export default {
       const color = colors.find((c) => String(c.id) === wantedColor) ?? colors[0];
       if (!color) throw new Error('Üründe renk/beden bilgisi yok');
 
-      // Bazı ürünlerde (ör. Stradivarius jean) aynı ailedeki başka modellerin bedenleri de geliyor;
-      // parça numarası rengin referansıyla başlayanlar bu ürüne ait
-      const ref = color.reference?.replace(/^C/, '').replace(/-.*$/, '');
-      const own = ref ? (color.sizes ?? []).filter((s) => s.partnumber?.startsWith(ref)) : [];
-      const bySize = new Map();
-      for (const s of own.length ? own : (color.sizes ?? [])) {
-        const name = s.name + (SIZE_TYPES[s.sizeType] ? ` ${SIZE_TYPES[s.sizeType]}` : '');
-        const size = {
-          name,
-          // SHOW = stokta, SOLD_OUT = tükendi, COMING_SOON = yakında
-          available: s.visibilityValue === 'SHOW',
-          price: Number(s.price) / 100,
-        };
-        const seen = bySize.get(name);
-        bySize.set(name, seen ? { ...seen, available: seen.available || size.available } : size);
-      }
-      const sizes = [...bySize.values()];
-      const oldPrices = own.concat(color.sizes ?? []).map((s) => Number(s.oldPrice) / 100).filter((p) => p > 0);
+      const sizes = sizesOf(color);
+      const oldPrices = (color.sizes ?? []).map((s) => Number(s.oldPrice) / 100).filter((p) => p > 0);
       return {
         title: product.name,
         color: color.name,
@@ -70,6 +74,7 @@ export default {
         price: Math.min(...sizes.map((s) => s.price).filter((p) => p > 0)),
         listPrice: oldPrices.length ? Math.max(...oldPrices) : null,
         sizes,
+        colors: colors.map((c) => ({ name: c.name, current: c === color, sizes: sizesOf(c).map(({ name, available }) => ({ name, available })) })),
       };
     });
   },

@@ -6,8 +6,8 @@ const esc = (s) =>
 export function linkPage({ title, message, product, button, danger, done }) {
   const card = product
     ? `<a class="product" href="${esc(product.url)}" target="_blank" rel="noopener">
-        ${product.image ? `<img src="${esc(product.image)}" alt="">` : '<div class="ph"></div>'}
-        <div><div class="name">${esc(product.title ?? 'Ürün')}</div>${product.color ? `<div class="sub">${esc(product.color)}</div>` : ''}</div>
+        ${product.image ? `<img src="${esc(product.image)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph"></div>'}
+        <div>${product.color ? `<div class="label">${esc(product.color)}</div>` : ''}<div class="name">${esc(product.title ?? 'Ürün')}</div></div>
       </a>`
     : '';
   const action = button
@@ -20,39 +20,42 @@ export function linkPage({ title, message, product, button, danger, done }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>${esc(title)} · Ürün Takip</title>
+<link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<script>try{var t=localStorage.getItem('tema');if(t==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try{if(localStorage.getItem('tema')==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
 <style>
-  :root[data-theme="dark"] { --bg:#0c0c0d; --surface:#151517; --line:rgba(255,255,255,.08); --text:#f2efe8; --muted:#8e8b84; --accent:#d4b98c; --accent-ink:#17140f; --danger:#e58a7c; }
-  :root[data-theme="light"] { --bg:#f6f4ef; --surface:#ffffff; --line:rgba(23,22,26,.09); --text:#17161a; --muted:#6f6b63; --accent:#9a7a45; --accent-ink:#ffffff; --danger:#b54a3c; }
+  :root[data-theme="dark"] { --bg:#0b0b0b; --raise:#171717; --line:#232323; --line-2:#343434; --text:#ecebe7; --muted:#7c7a75; --sale:#e0735e; --inv-bg:#ecebe7; --inv-text:#0b0b0b; }
+  :root[data-theme="light"] { --bg:#f7f6f3; --raise:#efede8; --line:#e4e1db; --line-2:#cfcbc3; --text:#121212; --muted:#8a867e; --sale:#b3412c; --inv-bg:#121212; --inv-text:#f7f6f3; }
   * { box-sizing: border-box; }
-  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px 16px; background:var(--bg); color:var(--text); font:15px/1.5 Inter, system-ui, sans-serif; }
-  main { width:100%; max-width:420px; text-align:center; }
-  .brand { font-family:"Instrument Serif", Georgia, serif; font-size:22px; letter-spacing:.2px; color:var(--muted); margin-bottom:28px; }
-  .brand b { color:var(--accent); font-weight:400; }
-  h1 { font-family:"Instrument Serif", Georgia, serif; font-weight:400; font-size:36px; line-height:1.1; margin:0 0 10px; }
-  p { color:var(--muted); margin:0 0 24px; }
-  .product { display:flex; gap:14px; align-items:center; text-align:left; padding:12px; border:1px solid var(--line); border-radius:16px; background:var(--surface); color:inherit; text-decoration:none; margin-bottom:24px; }
-  .product img, .ph { width:64px; height:80px; object-fit:cover; border-radius:10px; background:var(--line); flex:none; }
-  .name { font-weight:500; }
-  .sub { color:var(--muted); font-size:13px; }
-  .btn { width:100%; padding:14px 18px; border-radius:999px; border:0; font:600 15px Inter, sans-serif; cursor:pointer; background:var(--accent); color:var(--accent-ink); }
-  .btn.danger { background:transparent; color:var(--danger); border:1px solid var(--danger); }
-  .done { width:52px; height:52px; margin:0 auto 18px; border-radius:50%; display:grid; place-items:center; background:var(--accent); color:var(--accent-ink); font-size:24px; }
-  .back { display:inline-block; margin-top:22px; color:var(--muted); font-size:13px; }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--text); font:15px/1.5 "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing:antialiased; }
+  header { height:64px; display:flex; align-items:center; justify-content:center; border-bottom:1px solid var(--line); }
+  .wordmark { font-size:13px; font-weight:600; letter-spacing:.34em; text-transform:uppercase; color:inherit; text-decoration:none; }
+  main { flex:1; display:grid; place-items:center; padding:48px 18px; }
+  .box { width:100%; max-width:400px; }
+  .label { font-size:11px; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  h1 { font-family:"Bodoni Moda", Didot, serif; font-weight:400; font-size:42px; line-height:1.05; margin:14px 0 12px; letter-spacing:-.4px; }
+  p { color:var(--muted); margin:0 0 30px; }
+  .product { display:flex; gap:16px; align-items:center; padding:18px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); color:inherit; text-decoration:none; margin-bottom:30px; }
+  .product img, .ph { width:60px; height:80px; object-fit:cover; background:var(--raise); flex:none; }
+  .name { font-size:14px; margin-top:4px; }
+  .btn { width:100%; height:48px; border:1px solid var(--inv-bg); background:var(--inv-bg); color:var(--inv-text); font:600 11.5px "Hanken Grotesk", sans-serif; letter-spacing:.16em; text-transform:uppercase; cursor:pointer; }
+  .btn.danger { background:transparent; color:var(--sale); border-color:var(--sale); }
+  .back { display:inline-block; margin-top:24px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); text-underline-offset:5px; }
 </style>
 </head>
 <body>
+<header><a class="wordmark" href="/">Ürün Takip</a></header>
 <main>
-  <div class="brand">Ürün <b>Takip</b></div>
-  ${done ? '<div class="done">✓</div>' : ''}
-  <h1>${esc(title)}</h1>
-  <p>${esc(message)}</p>
-  ${card}
-  ${action}
-  <a class="back" href="/">Panele git</a>
+  <div class="box">
+    <div class="label">${done ? 'Tamamlandı' : 'Onay'}</div>
+    <h1>${esc(title)}</h1>
+    <p>${esc(message)}</p>
+    ${card}
+    ${action}
+    <a class="back" href="/">Panele git</a>
+  </div>
 </main>
 </body>
 </html>`;

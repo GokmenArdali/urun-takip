@@ -102,6 +102,21 @@ test('mağaza stoğu: yeni mağazada istenen beden çıkınca bildirim', () => {
   assert.deepEqual(groupStores(['1|A|M', '1|A|L', '2|B|M']), [{ name: 'A', sizes: ['M', 'L'] }, { name: 'B', sizes: ['M'] }]);
 });
 
+test('başka renkte istenen beden stoğa girince bildirim', () => {
+  const colors = [
+    { name: 'Siyah', current: true, sizes: [{ name: 'M', available: false }] },
+    { name: 'Haki', current: false, sizes: [{ name: 'M', available: true }, { name: 'L', available: true }] },
+    { name: 'Kum', current: false, sizes: [{ name: 'M', available: false }] },
+  ];
+  const watch = { sizes: ['M'], other_colors: 1, state: known({ colorKeys: [] }) };
+  const { events, state } = evaluate(watch, product([['M', false]], 1000, { colors }), { now: NOW });
+  assert.deepEqual(events, [{ type: 'color', colors: [{ name: 'Haki', sizes: ['M'] }] }]);
+  assert.deepEqual(state.colorKeys, ['Haki|M']);
+  // Kapalıysa ya da ilk kez temel alınıyorsa bildirim yok
+  assert.deepEqual(evaluate({ ...watch, other_colors: 0 }, product([['M', false]], 1000, { colors }), { now: NOW }).events, []);
+  assert.deepEqual(evaluate({ ...watch, state: known() }, product([['M', false]], 1000, { colors }), { now: NOW }).events, []);
+});
+
 test('fiyat geçmişi: son 30 günün en düşüğü ve şişirilmiş fiyat tespiti', () => {
   const h = (daysAgo, price) => ({ t: NOW - daysAgo * DAY, price });
   assert.deepEqual(priceInsight([h(20, 1000), h(10, 1100), h(3, 1200)], 900, NOW), { lowest30: true });

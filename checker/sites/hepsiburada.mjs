@@ -32,7 +32,17 @@ export default {
         }))
         .filter((s) => s.name);
 
+      const byColor = new Map();
+      for (const v of variants) {
+        const c = prop(v, isColor);
+        const name = prop(v, (p) => !isColor(p));
+        if (!c || !name) continue;
+        if (!byColor.has(c)) byColor.set(c, []);
+        byColor.get(c).push({ name, available: !!v.isInStock });
+      }
+
       return {
+        colors: byColor.size > 1 ? [...byColor].map(([name, s]) => ({ name, current: name === color, sizes: s })) : null,
         title: [product.brand, product.name].filter(Boolean).join(' '),
         color,
         image: await ogImage(page),

@@ -47,12 +47,12 @@ async function main() {
     return;
   }
   const started = Date.now();
-  const { jobs } = await api(`/api/checker/jobs${process.env.CHECK_ALL === '1' ? '?all=1' : ''}`);
+  const { jobs, vapidPublicKey } = await api(`/api/checker/jobs${process.env.CHECK_ALL === '1' ? '?all=1' : ''}`);
   console.log(`${jobs.length} ürün kontrol edilecek`);
   if (!jobs.length) return;
 
   const browser = createBrowser();
-  const outbox = createOutbox({ dryRun: process.env.NOTIFY_DRY_RUN === '1' });
+  const outbox = createOutbox({ dryRun: process.env.NOTIFY_DRY_RUN === '1', vapidPublicKey });
   const results = [];
 
   try {
@@ -106,6 +106,7 @@ async function main() {
         list_price: data?.listPrice ?? null,
         sizes: data?.sizes ?? null,
         stores: data?.stores ?? null,
+        colors: data?.colors ?? null,
         watches,
       });
     });
@@ -113,7 +114,9 @@ async function main() {
     await browser.close();
   }
 
-  const { alerts = [] } = await api('/api/checker/results', { results });
+  // Önce kullanıcı bildirimleri; geçersiz telefon abonelikleri sonuçlarla birlikte panele bildirilir
+  const { failed, expired } = await outbox.flush();
+  const { alerts = [] } = await api('/api/checker/results', { results, expired_push: expired });
   for (const a of alerts) {
     if (a.type === 'down') {
       outbox.addAdmin(`${a.site} okunamıyor${a.repeat ? ' (hâlâ)' : ''}`, [
@@ -126,7 +129,7 @@ async function main() {
     }
   }
 
-  const failedNotifications = await outbox.flush();
+  const failedNotifications = failed + (await outbox.flushAdmin());
   console.log(`${outbox.size} bildirim hazırlandı, ${failedNotifications} tanesi gönderilemedi`);
   console.log(`Bitti: ${results.length} ürün, ${((Date.now() - started) / 1000).toFixed(0)} sn`);
   if (failedNotifications) process.exitCode = 1; // GitHub'da kırmızı görünsün ki fark edilsin

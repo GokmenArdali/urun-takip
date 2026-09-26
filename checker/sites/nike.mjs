@@ -29,9 +29,7 @@ export default {
         `https://api.nike.com/discover/product_details_availability/v1/marketplace/TR/language/tr/consumerChannelId/${CHANNEL}/groupKey/${groupKey}`,
         { headers: { Origin: 'https://www.nike.com', Referer: 'https://www.nike.com/' } },
       ).catch(() => null);
-      availability = new Map(
-        (live?.sizes ?? []).filter((s) => s.productCode === style).map((s) => [s.label, !!s.availability?.isAvailable]),
-      );
+      availability = new Map((live?.sizes ?? []).map((s) => [`${s.productCode}|${s.label}`, !!s.availability?.isAvailable]));
     }
 
     const price = product.prices?.currentPrice ?? null;
@@ -42,10 +40,18 @@ export default {
       image: metaContent(html, 'og:image'),
       price,
       listPrice: initial > price ? initial : null,
+      colors: Object.entries(products).map(([code, p]) => ({
+        name: p.colorDescription ?? code,
+        current: code === style,
+        sizes: (p.sizes ?? []).map((s) => ({
+          name: s.localizedLabel ?? s.label,
+          available: availability.size ? !!availability.get(`${code}|${s.label}`) : s.status === 'ACTIVE',
+        })),
+      })),
       sizes: (product.sizes ?? []).map((s) => ({
         name: s.localizedLabel ?? s.label,
         // Canlı stok alınamazsa sayfadaki durum kullanılır
-        available: availability.size ? !!availability.get(s.label) : s.status === 'ACTIVE',
+        available: availability.size ? !!availability.get(`${style}|${s.label}`) : s.status === 'ACTIVE',
         price,
       })),
     };

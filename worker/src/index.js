@@ -38,6 +38,20 @@ const SITES = [
 ];
 // Mağaza stoğu şimdilik sadece Zara'da
 const STORE_STOCK_SITES = new Set(['Zara']);
+// Tüm renkleri tek sayfada veren siteler: başka renkte stok uyarısı
+const OTHER_COLOR_SITES = new Set([
+  'Zara',
+  'Pull&Bear',
+  'Bershka',
+  'Stradivarius',
+  'Massimo Dutti',
+  'Oysho',
+  'Lefties',
+  'Zara Home',
+  'Hepsiburada',
+  'Nike',
+  'H&M',
+]);
 const TRACKING_PARAMS = /^(utm_.*|gclid|gbraid|wbraid|fbclid|yclid|msclkid|mc_.*|_ga|ref|referrer|boutiqueId|sav|adjust_.*)$/i;
 
 class HttpError extends Error {
@@ -77,6 +91,13 @@ async function handle(request, env, ctx) {
   const link = url.pathname.match(/^\/t\/(\d+)\/(birak|devam)\/([a-f0-9]{24})$/);
   if (link) return linkAction(request, env, Number(link[1]), link[2], link[3]);
 
+  // Telefonda başka bir uygulamadan "Paylaş → Ürün Takip": linki ekleme formuna taşır
+  if (route === 'GET /paylas') {
+    const text = [url.searchParams.get('url'), url.searchParams.get('text'), url.searchParams.get('title')].join(' ');
+    const shared = text.match(/https?:\/\/[^\s"'<>]+/)?.[0];
+    return Response.redirect(`${url.origin}/${shared ? `?link=${encodeURIComponent(shared)}` : ''}`, 303);
+  }
+
   if (url.pathname.startsWith('/api/checker/')) {
     await requireToken(request, env);
     if (route === 'GET /api/checker/jobs') return checkerJobs(env, url.searchParams.get('all') === '1');
@@ -92,6 +113,9 @@ async function handle(request, env, ctx) {
   if (route === 'POST /api/watches') return addWatch(request, env, ctx);
   if (route === 'GET /api/product') return productPreview(env, url.searchParams.get('url'));
   if (route === 'GET /api/status') return status(env);
+  if (route === 'POST /api/push') return savePush(request, env);
+  if (route === 'DELETE /api/push') return deletePush(request, env);
+  if (route === 'POST /api/push/test') return testPush(request, env, url.origin);
   const one = url.pathname.match(/^\/api\/watches\/(\d+)$/);
   if (one && request.method === 'DELETE') return deleteWatch(env, Number(one[1]), contactOf(url));
   if (one && request.method === 'PATCH') return updateWatch(request, env, ctx, Number(one[1]), contactOf(url));
@@ -159,9 +183,9 @@ const isMine = (w, c) => (c.email && w.email === c.email) || (c.ntfy && w.ntfy =
 async function listWatches(env, contact) {
   const [{ results }, { results: history }] = await Promise.all([
     env.DB.prepare(
-      `SELECT w.id, w.owner, w.email, w.ntfy, w.sizes, w.target_price, w.target_percent, w.fast, w.paused, w.store_stock,
+      `SELECT w.id, w.owner, w.email, w.ntfy, w.sizes, w.target_price, w.target_percent, w.fast, w.paused, w.store_stock, w.other_colors,
               w.state, w.created_at, p.id AS product_id, p.url, p.site, p.title, p.color, p.image, p.price, p.list_price,
-              p.sizes AS product_sizes, p.stores, p.last_checked, p.fail_count, p.last_error
+              p.sizes AS product_sizes, p.stores, p.colors, p.last_checked, p.fail_count, p.last_error
        FROM watches w JOIN products p ON p.id = w.product_id
        ORDER BY w.created_at DESC`,
     ).all(),
@@ -187,7 +211,10 @@ async function listWatches(env, contact) {
       sizes: parse(w.sizes, []),
       product_sizes: parse(w.product_sizes, null),
       stores: parse(w.stores, null),
+      colors: parse(w.colors, null),
       fast: !!w.fast,
+      other_colors: !!w.other_colors,
+      other_colors_supported: OTHER_COLOR_SITES.has(w.site),
       paused: !!w.paused,
       store_stock: !!w.store_stock,
       store_stock_supported: STORE_STOCK_SITES.has(w.site),
@@ -212,6 +239,7 @@ async function productPreview(env, raw) {
     price: p?.price ?? null,
     sizes: parse(p?.sizes, null),
     store_stock_supported: STORE_STOCK_SITES.has(site),
+    other_colors_supported: OTHER_COLOR_SITES.has(site),
     size_tracking: SITES.some(([, name]) => name === site),
   });
 }
@@ -249,6 +277,7 @@ async function addWatch(request, env, ctx) {
   const target = parseTarget(body.target);
   const site = siteName(url);
   const storeStock = body.store_stock && STORE_STOCK_SITES.has(site) ? 1 : 0;
+  const otherColors = body.other_colors && OTHER_COLOR_SITES.has(site) ? 1 : 0;
 
   const contactWhere = '(email IS NOT NULL AND email = ?1) OR (ntfy IS NOT NULL AND ntfy = ?2)';
   const [total, mine] = await Promise.all([
@@ -270,9 +299,9 @@ async function addWatch(request, env, ctx) {
 
   const [insert] = await env.DB.batch([
     env.DB.prepare(
-      `INSERT INTO watches (product_id, owner, email, ntfy, sizes, target_price, target_percent, fast, store_stock, created_at, last_activity)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).bind(productId, owner, email, ntfy, JSON.stringify(sizes), target.price, target.percent, body.fast ? 1 : 0, storeStock, now, now),
+      `INSERT INTO watches (product_id, owner, email, ntfy, sizes, target_price, target_percent, fast, store_stock, other_colors, created_at, last_activity)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).bind(productId, owner, email, ntfy, JSON.stringify(sizes), target.price, target.percent, body.fast ? 1 : 0, storeStock, otherColors, now, now),
     // Yeni takip hemen kontrol edilsin
     env.DB.prepare('UPDATE products SET last_checked = NULL WHERE id = ?').bind(productId),
   ]);
@@ -315,6 +344,10 @@ async function updateWatch(request, env, ctx, id, contact) {
     set('store_stock', body.store_stock && STORE_STOCK_SITES.has(watch.site) ? 1 : 0);
     resync = true;
   }
+  if ('other_colors' in body) {
+    set('other_colors', body.other_colors && OTHER_COLOR_SITES.has(watch.site) ? 1 : 0);
+    resync = true;
+  }
   if ('paused' in body) {
     set('paused', body.paused ? 1 : 0);
     if (!body.paused) set('last_activity', Date.now());
@@ -331,7 +364,7 @@ async function updateWatch(request, env, ctx, id, contact) {
   }
   const stmts = [env.DB.prepare(`UPDATE watches SET ${sets.join(', ')}, state = ${stateExpr} WHERE id = ?`).bind(...binds, id)];
   // Tekrar açılan veya mağaza stoğu açılan takip hemen kontrol edilsin
-  if (body.paused === false || body.store_stock) {
+  if (body.paused === false || body.store_stock || body.other_colors) {
     stmts.push(env.DB.prepare('UPDATE products SET last_checked = NULL WHERE id = ?').bind(watch.product_id));
     ctx.waitUntil(dispatch(env, { debounce: true }));
   }
@@ -367,7 +400,66 @@ async function status(env) {
     lastRun: Number(meta.last_run) || null,
     lastDispatch: Number(meta.last_dispatch) || null,
     dispatchError: meta.dispatch_error || null,
+    vapidPublicKey: env.VAPID_PUBLIC_KEY || null,
   });
+}
+
+// ---------- Telefon/bilgisayar bildirimleri (Web Push) ----------
+
+async function savePush(request, env) {
+  const { subscription: sub, email, ntfy } = await readJson(request);
+  const endpoint = String(sub?.endpoint ?? '');
+  if (!/^https:\/\//.test(endpoint) || endpoint.length > 1000 || !sub?.keys?.p256dh || !sub?.keys?.auth) {
+    throw new HttpError(400, 'Bildirim aboneliği geçersiz');
+  }
+  const contact = { email: email ? String(email).trim().toLowerCase() : null, ntfy: ntfy ? String(ntfy).trim() : null };
+  if (!contact.email && !contact.ntfy) throw new HttpError(400, 'Önce e-posta ya da ntfy bilgini kaydet');
+  await env.DB.prepare(
+    `INSERT INTO push_subscriptions (endpoint, p256dh, auth, email, ntfy, created_at) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth, email = excluded.email, ntfy = excluded.ntfy`,
+  )
+    .bind(endpoint, String(sub.keys.p256dh), String(sub.keys.auth), contact.email, contact.ntfy, Date.now())
+    .run();
+  return json({ ok: true });
+}
+
+async function deletePush(request, env) {
+  const { endpoint } = await readJson(request);
+  await env.DB.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').bind(String(endpoint ?? '')).run();
+  return json({ ok: true });
+}
+
+const b64urlDecode = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(s.length / 4) * 4, '=')), (c) => c.charCodeAt(0));
+const b64urlEncode = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+// İçeriksiz (payload'suz) push: şifreleme gerekmez, sadece VAPID imzası. Telefon "Bildirimler açık" gösterir.
+async function testPush(request, env, origin) {
+  const { endpoint } = await readJson(request);
+  const sub = await env.DB.prepare('SELECT endpoint FROM push_subscriptions WHERE endpoint = ?').bind(String(endpoint ?? '')).first();
+  if (!sub) throw new HttpError(404, 'Bu cihazın bildirim aboneliği bulunamadı');
+  if (!env.VAPID_PRIVATE_KEY || !env.VAPID_PUBLIC_KEY) throw new HttpError(503, 'Bildirim anahtarı ayarlanmamış (VAPID_PRIVATE_KEY)');
+
+  const pub = b64urlDecode(env.VAPID_PUBLIC_KEY);
+  const key = await crypto.subtle.importKey(
+    'jwk',
+    { kty: 'EC', crv: 'P-256', d: env.VAPID_PRIVATE_KEY.trim(), x: b64urlEncode(pub.slice(1, 33)), y: b64urlEncode(pub.slice(33, 65)) },
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['sign'],
+  );
+  const enc = (o) => b64urlEncode(new TextEncoder().encode(JSON.stringify(o)));
+  const unsigned = `${enc({ typ: 'JWT', alg: 'ES256' })}.${enc({ aud: new URL(sub.endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: origin })}`;
+  const signature = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(unsigned));
+  const res = await fetch(sub.endpoint, {
+    method: 'POST',
+    headers: { Authorization: `vapid t=${unsigned}.${b64urlEncode(signature)}, k=${env.VAPID_PUBLIC_KEY}`, TTL: '60', Urgency: 'high', 'Content-Length': '0' },
+  });
+  if (res.status === 404 || res.status === 410) {
+    await env.DB.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').bind(sub.endpoint).run();
+    throw new HttpError(410, 'Bu cihazın bildirim izni kaldırılmış; bildirimleri tekrar aç');
+  }
+  if (!res.ok) throw new HttpError(502, `Bildirim servisi reddetti (${res.status})`);
+  return json({ ok: true });
 }
 
 // ---------- E-posta linkleri ----------
@@ -431,7 +523,7 @@ async function checkerJobs(env, all) {
   if (!products.length) return json({ jobs: [] });
 
   const ids = JSON.stringify(products.map((p) => p.id));
-  const [{ results: watches }, { results: history }] = await Promise.all([
+  const [{ results: watches }, { results: history }, { results: subs }] = await Promise.all([
     env.DB.prepare('SELECT * FROM watches WHERE paused = 0 AND product_id IN (SELECT value FROM json_each(?))').bind(ids).all(),
     // Fiyat yorumu için son 35 günün günlük en düşük fiyatları
     env.DB.prepare(
@@ -440,7 +532,12 @@ async function checkerJobs(env, all) {
     )
       .bind(Date.now() - 35 * DAY, ids)
       .all(),
+    env.DB.prepare('SELECT endpoint, p256dh, auth, email, ntfy FROM push_subscriptions').all(),
   ]);
+  const pushFor = (w) =>
+    subs
+      .filter((s) => (w.email && s.email === w.email) || (w.ntfy && s.ntfy === w.ntfy))
+      .map(({ endpoint, p256dh, auth }) => ({ endpoint, keys: { p256dh, auth } }));
 
   const jobs = products.map((p) => {
     const own = watches.filter((w) => w.product_id === p.id);
@@ -454,6 +551,7 @@ async function checkerJobs(env, all) {
       sizes: parse(p.sizes, []),
       fail_count: p.fail_count,
       store_stock: own.some((w) => w.store_stock),
+      other_colors: own.some((w) => w.other_colors),
       history: history.filter((h) => h.product_id === p.id).map(({ t, price }) => ({ t, price })),
       watches: own.map((w) => ({
         id: w.id,
@@ -463,17 +561,19 @@ async function checkerJobs(env, all) {
         target_price: w.target_price,
         target_percent: w.target_percent,
         store_stock: w.store_stock,
+        other_colors: w.other_colors,
+        push: pushFor(w),
         created_at: w.created_at,
         last_activity: w.last_activity,
         state: parse(w.state, null),
       })),
     };
   });
-  return json({ jobs });
+  return json({ jobs, vapidPublicKey: env.VAPID_PUBLIC_KEY || null });
 }
 
 async function checkerResults(request, env) {
-  const { results } = await readJson(request);
+  const { results, expired_push: expired = [] } = await readJson(request);
   if (!Array.isArray(results)) throw new HttpError(400, 'results bekleniyordu');
   const now = Date.now();
   const stmts = [];
@@ -482,7 +582,7 @@ async function checkerResults(request, env) {
       stmts.push(
         env.DB.prepare(
           `UPDATE products SET title = ?, color = ?, image = COALESCE(?, image), price = ?, list_price = ?, sizes = ?,
-             stores = ?, last_checked = ?, fail_count = 0, last_error = NULL WHERE id = ?`,
+             stores = ?, colors = ?, last_checked = ?, fail_count = 0, last_error = NULL WHERE id = ?`,
         ).bind(
           r.title ?? null,
           r.color ?? null,
@@ -491,6 +591,7 @@ async function checkerResults(request, env) {
           r.list_price ?? null,
           JSON.stringify(r.sizes ?? []),
           r.stores ? JSON.stringify(r.stores) : null,
+          r.colors ? JSON.stringify(r.colors) : null,
           now,
           r.product_id,
         ),
@@ -526,6 +627,10 @@ async function checkerResults(request, env) {
     env.DB.prepare('UPDATE products SET last_checked = NULL WHERE id IN (SELECT product_id FROM watches WHERE state IS NULL AND paused = 0)'),
   );
   stmts.push(env.DB.prepare('DELETE FROM price_history WHERE t < ?').bind(now - HISTORY_KEEP_MS));
+  // Kullanıcı bildirim iznini kaldırdıysa/uygulamayı sildiyse abonelik silinir
+  for (const endpoint of expired.slice(0, 100)) {
+    stmts.push(env.DB.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').bind(String(endpoint)));
+  }
   stmts.push(env.DB.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('last_run', ?)").bind(String(now)));
   await env.DB.batch(stmts);
   return json({ ok: true, alerts: await siteAlerts(env, now) });

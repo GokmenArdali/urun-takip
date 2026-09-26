@@ -118,6 +118,8 @@ export default {
 
       const live = await poll(() => availability.get(String(color.productId)), { timeout: 8000 });
       const liveBySku = new Map((live?.sizes ?? []).map((s) => [s.sku, s.availability]));
+      const allBySku = new Map([...availability.values()].flatMap((a) => (a?.sizes ?? []).map((s) => [s.sku, s.availability])));
+      const inStock = (s) => IN_STOCK.has(liveBySku.get(s.sku) ?? allBySku.get(s.sku) ?? s.availability);
       // Mağaza stoğu okunamazsa ürünün kendisi yine de takip edilir
       const stores = wantStores
         ? await storeStock(page, color.productId, (color.sizes ?? []).map((s) => s.name)).catch((e) => {
@@ -133,9 +135,14 @@ export default {
         price: color.price / 100,
         listPrice: color.oldPrice > color.price ? color.oldPrice / 100 : null,
         stores,
+        colors: colors.map((c) => ({
+          name: c.name,
+          current: c === color,
+          sizes: (c.sizes ?? []).map((s) => ({ name: cleanSize(s.name), available: inStock(s) })),
+        })),
         sizes: (color.sizes ?? []).map((s) => ({
           name: cleanSize(s.name),
-          available: IN_STOCK.has(liveBySku.get(s.sku) ?? s.availability),
+          available: inStock(s),
           price: (s.price ?? color.price) / 100,
         })),
       };

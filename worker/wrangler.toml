@@ -10,6 +10,11 @@ database_name = "urun-takip"
 database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "migrations"
 
+# Uygulama ikonları, manifest ve service worker
+[assets]
+directory = "public"
+binding = "ASSETS"
+
 # Her 5 dakikada bir, kontrol zamanı gelen ürün varsa GitHub'daki kontrol programını çalıştırır
 [triggers]
 crons = ["*/5 * * * *"]
@@ -17,8 +22,11 @@ crons = ["*/5 * * * *"]
 [vars]
 GITHUB_REPO = "GokmenArdali/urun-takip"
 GITHUB_WORKFLOW = "kontrol.yml"
+# Telefon bildirimleri (Web Push) için herkese açık anahtar; gizli eşi GitHub Secrets'ta VAPID_PRIVATE_KEY
+VAPID_PUBLIC_KEY = "BCFzs-8X-HeSlZrEOsU3KqnVNnHcIZ3_vMmL172vZwMrqSj4woMJMVtPjMb3mODl6OpdkCDDyGzrcH-DYtGFbyQ"
 
 # Gizli değerler burada yazılmaz; "Paneli yükle" iş akışı GitHub Secrets'tan alıp Cloudflare'e yükler:
 #   PANEL_PASSWORD  panele giriş şifresi
 #   API_TOKEN       kontrol programıyla paylaşılan anahtar (GitHub'da da aynısı)
 #   DISPATCH_TOKEN  kontrol programını başlatmak için GitHub erişim anahtarı
+#   VAPID_PRIVATE_KEY  telefon bildirimi imza anahtarı (panelden deneme bildirimi için)

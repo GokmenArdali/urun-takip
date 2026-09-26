@@ -46,6 +46,13 @@ export default {
         image: absolute(variant.images?.[0]?.image ?? variant.images?.[0]?.baseUrl) ?? (await ogImage(page)),
         price,
         listPrice: white > price ? white : null,
+        colors: Object.entries(variations)
+          .filter(([, v]) => Array.isArray(v?.sizes) && v.sizes.length)
+          .map(([k, v]) => ({
+            name: v.name ?? k,
+            current: k === code,
+            sizes: v.sizes.map((s) => ({ name: s.name, available: inStock ? inStock.has(s.sizeCode) : true })),
+          })),
         sizes: (variant.sizes ?? []).map((s) => ({
           name: s.name,
           available: inStock ? inStock.has(s.sizeCode) : true,

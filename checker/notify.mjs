@@ -2,6 +2,7 @@
 // DİKKAT: GitHub kayıtları herkese açık, e-posta adresleri ve ntfy konuları asla loglanmamalı.
 import crypto from 'node:crypto';
 import nodemailer from 'nodemailer';
+import webpush from 'web-push';
 
 const tl = (n) =>
   n == null ? '?' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
@@ -34,6 +35,7 @@ export function describe(event, product, watch) {
     chips: null,
     insight: null,
     stores: null,
+    colors: null,
     cta: { label: 'Ürüne git', url: product.url },
     secondary: [],
     tags: [],
@@ -64,6 +66,9 @@ export function describe(event, product, watch) {
         m.lines.push(`Hedef fiyatın: ${tl(event.target)}${pct}${event.belowTarget ? ' — fiyat zaten hedefin altında!' : ''}`);
       }
       if (event.stores) m.stores = event.stores;
+      if (event.otherColors) {
+        m.lines.push(`Diğer renklerde stokta: ${event.otherColors.map((c) => `${c.name} (${c.sizes.join(', ')})`).join(', ')}`);
+      }
       m.lines.push('Stoğa girince ya da fiyat düşünce haber vereceğim.');
       break;
     }
@@ -75,6 +80,14 @@ export function describe(event, product, watch) {
       m.price = event.price;
       m.chips = event.sizes.map((s) => ({ label: s, state: 'in' }));
       m.lines.push(`${event.sizes.join(', ')} beden stoğa girdi. Kapışılmadan göz at!`);
+      break;
+    case 'color':
+      m.badge = 'Başka renkte';
+      m.subject = `Başka renkte stokta: ${event.colors.map((c) => c.name).slice(0, 3).join(', ')} · ${full}`;
+      m.tags = ['art'];
+      m.priority = 4;
+      m.colors = event.colors;
+      m.lines.push('İstediğin beden şu renklerde stoğa girdi:');
       break;
     case 'store':
       m.badge = 'Mağazada';
@@ -152,11 +165,11 @@ function chipsHtml(chips) {
     .join('')}</div>`;
 }
 
-function storesHtml(stores) {
+function rowsHtml(stores, icon = '') {
   if (!stores?.length) return '';
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 4px;border-collapse:collapse">${stores
     .map(
-      (s) => `<tr><td class="line" style="padding:8px 0;border-top:1px solid #ece9e2;font:500 13px ${SANS};color:#17161a">📍 ${esc(s.name)}</td>
+      (s) => `<tr><td class="line" style="padding:8px 0;border-top:1px solid #ece9e2;font:500 13px ${SANS};color:#17161a">${icon}${esc(s.name)}</td>
       <td class="line muted" align="right" style="padding:8px 0;border-top:1px solid #ece9e2;font:13px ${SANS};color:#6f6b63">${esc(s.sizes.join(', '))}</td></tr>`,
     )
     .join('')}</table>`;
@@ -194,7 +207,8 @@ function cardHtml(m) {
     ${insight}
     ${m.lines.map((l) => `<div class="text2" style="margin:12px 0 0;font:14px/1.55 ${SANS};color:#3d3a35">${esc(l)}</div>`).join('')}
     ${chipsHtml(m.chips)}
-    ${storesHtml(m.stores)}
+    ${rowsHtml(m.stores, '📍 ')}
+    ${rowsHtml(m.colors)}
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px 0 0"><tr><td class="cta" style="border-radius:999px;background:#17161a">
       <a href="${esc(m.cta.url)}" class="cta-a" style="display:inline-block;padding:12px 22px;font:600 14px ${SANS};color:#f6f4ef;text-decoration:none">${esc(m.cta.label)} →</a>
     </td></tr></table>
@@ -254,6 +268,7 @@ function emailText(messages) {
         ...m.lines,
         m.chips?.map((c) => c.label).join(', '),
         m.stores?.map((s) => `${s.name}: ${s.sizes.join(', ')}`).join('\n'),
+        m.colors?.map((s) => `${s.name}: ${s.sizes.join(', ')}`).join('\n'),
         `${m.cta.label}: ${m.cta.url}`,
         ...m.secondary.map((s) => `${s.label}: ${s.url}`),
       ]
@@ -270,10 +285,41 @@ function adminHtml(items) {
   </div>`;
 }
 
-export function createOutbox({ dryRun = false } = {}) {
+// Telefonda kısa metin (ntfy ve Web Push için)
+function shortBody(m) {
+  return [
+    m.price != null ? `${tl(m.price)}${m.oldPrice > m.price ? ` (önce ${tl(m.oldPrice)})` : ''}` : null,
+    m.insight?.text,
+    m.chips?.length && m.kind !== 'start' ? `Beden: ${m.chips.map((c) => c.label).join(', ')}` : null,
+    m.stores?.map((s) => `${s.name}: ${s.sizes.join(', ')}`).join('\n'),
+    m.colors?.map((s) => `${s.name}: ${s.sizes.join(', ')}`).join('\n'),
+    m.kind === 'start' || m.kind === 'reminder' || m.kind === 'broken' ? m.lines[0] : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+export function createOutbox({ dryRun = false, vapidPublicKey = null } = {}) {
   const emails = new Map(); // adres -> mesajlar
-  const pushes = [];
+  const ntfys = [];
+  const webPushes = [];
   const admin = [];
+
+  let mailer = null;
+  const sendMail = async (to, mail) => {
+    const user = (process.env.GMAIL_USER ?? '').trim();
+    mailer ??= nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass: (process.env.GMAIL_APP_PASSWORD ?? '').replace(/\s+/g, '') },
+    });
+    try {
+      await mailer.sendMail({ from: `Ürün Takip <${user}>`, to, ...mail });
+      return true;
+    } catch (e) {
+      console.error(`E-posta gönderilemedi: ${e.message}`);
+      return false;
+    }
+  };
 
   return {
     add(watch, product, event) {
@@ -282,7 +328,8 @@ export function createOutbox({ dryRun = false } = {}) {
         if (!emails.has(watch.email)) emails.set(watch.email, []);
         emails.get(watch.email).push(message);
       }
-      if (watch.ntfy) pushes.push({ topic: watch.ntfy, message });
+      if (watch.ntfy) ntfys.push({ topic: watch.ntfy, message });
+      for (const sub of watch.push ?? []) webPushes.push({ sub, message, tag: `urun-${watch.id}-${event.type}` });
     },
 
     // Yöneticiye (ADMIN_EMAIL) giden sistem uyarıları
@@ -291,71 +338,41 @@ export function createOutbox({ dryRun = false } = {}) {
     },
 
     get size() {
-      return [...emails.values()].reduce((n, list) => n + list.length, 0) + pushes.length + admin.length;
+      return [...emails.values()].reduce((n, list) => n + list.length, 0) + ntfys.length + webPushes.length + admin.length;
     },
 
-    // Hata olursa diğer bildirimlere devam eder, başarısız sayısını döndürür
+    // Kullanıcı bildirimleri. Hata olursa diğerlerine devam eder.
+    // Dönüş: başarısız sayısı ve artık geçersiz olan Web Push abonelikleri
     async flush() {
       let failed = 0;
-      const adminTo = (process.env.ADMIN_EMAIL ?? '').trim();
+      const expired = [];
 
       if (dryRun) {
         for (const [to, list] of emails) for (const m of list) console.log(`[e-posta → ${to}] ${m.subject}\n  ${emailText([m]).split('\n').slice(1).join('\n  ')}`);
-        for (const p of pushes) console.log(`[ntfy → ${p.topic}] ${p.message.subject}`);
-        for (const a of admin) console.log(`[yönetici] ${a.subject}\n  ${a.lines.join('\n  ')}`);
-        return 0;
+        for (const p of ntfys) console.log(`[ntfy → ${p.topic}] ${p.message.subject}`);
+        for (const p of webPushes) console.log(`[telefon] ${p.message.subject}\n  ${shortBody(p.message).split('\n').join('\n  ')}`);
+        return { failed, expired };
       }
 
-      if (emails.size || (admin.length && adminTo)) {
-        const user = (process.env.GMAIL_USER ?? '').trim();
-        const transport = nodemailer.createTransport({
-          service: 'gmail',
-          auth: { user, pass: (process.env.GMAIL_APP_PASSWORD ?? '').replace(/\s+/g, '') },
+      for (const [to, list] of emails) {
+        const ok = await sendMail(to, {
+          subject: list.length === 1 ? list[0].subject : `${list.length} yeni bildirim · ${list[0].subject}`,
+          text: emailText(list),
+          html: emailHtml(list),
         });
-        const send = async (to, mail) => {
-          try {
-            await transport.sendMail({ from: `Ürün Takip <${user}>`, to, ...mail });
-            return true;
-          } catch (e) {
-            console.error(`E-posta gönderilemedi: ${e.message}`);
-            return false;
-          }
-        };
-        for (const [to, list] of emails) {
-          const ok = await send(to, {
-            subject: list.length === 1 ? list[0].subject : `${list.length} yeni bildirim · ${list[0].subject}`,
-            text: emailText(list),
-            html: emailHtml(list),
-          });
-          if (!ok) failed += list.length;
-        }
-        if (admin.length && adminTo) {
-          const ok = await send(adminTo, {
-            subject: admin.length === 1 ? `[Yönetici] ${admin[0].subject}` : `[Yönetici] ${admin.length} sistem uyarısı`,
-            text: admin.map((a) => `${a.subject}\n${a.lines.join('\n')}`).join('\n\n'),
-            html: adminHtml(admin),
-          });
-          if (!ok) failed += admin.length;
-        }
+        if (!ok) failed += list.length;
       }
 
-      for (const { topic, message: m } of pushes) {
+      for (const { topic, message: m } of ntfys) {
         try {
           const actions = [{ action: 'view', label: m.cta.label, url: m.cta.url, clear: true }];
           for (const s of m.secondary) actions.push({ action: 'view', label: s.label, url: s.url, clear: true });
-          const body = [
-            m.price != null ? `${tl(m.price)}${m.oldPrice > m.price ? ` (önce ${tl(m.oldPrice)})` : ''}` : null,
-            m.insight?.text,
-            m.chips?.length && m.kind !== 'start' ? `Beden: ${m.chips.map((c) => c.label).join(', ')}` : null,
-            m.stores?.map((s) => `📍 ${s.name}: ${s.sizes.join(', ')}`).join('\n'),
-            m.kind === 'start' || m.kind === 'reminder' || m.kind === 'broken' ? m.lines[0] : null,
-          ].filter(Boolean);
           const res = await fetch(process.env.NTFY_SERVER || 'https://ntfy.sh', {
             method: 'POST',
             body: JSON.stringify({
               topic,
               title: m.subject,
-              message: body.join('\n') || m.name,
+              message: shortBody(m) || m.name,
               click: m.url,
               tags: m.tags,
               priority: m.priority,
@@ -370,7 +387,51 @@ export function createOutbox({ dryRun = false } = {}) {
           console.error(`ntfy bildirimi gönderilemedi: ${e.message}`);
         }
       }
-      return failed;
+
+      const privateKey = (process.env.VAPID_PRIVATE_KEY ?? '').trim();
+      if (webPushes.length && (!privateKey || !vapidPublicKey)) {
+        console.error('Telefon bildirimi gönderilemedi: VAPID_PRIVATE_KEY ayarlanmamış');
+        failed += webPushes.length;
+      } else if (webPushes.length) {
+        // VAPID 'subject' https ya da mailto olmalı
+        const subject = panelUrl().startsWith('https://') ? panelUrl() : 'mailto:bildirim@example.com';
+        webpush.setVapidDetails(subject, vapidPublicKey, privateKey);
+        for (const { sub, message: m, tag } of webPushes) {
+          try {
+            const payload = JSON.stringify({
+              title: m.subject,
+              body: shortBody(m) || m.name,
+              url: m.url,
+              image: m.image,
+              tag,
+              leave: m.secondary[0]?.url ?? null,
+            });
+            await webpush.sendNotification(sub, payload, { TTL: 24 * 3600, urgency: m.priority >= 4 ? 'high' : 'normal', timeout: 15000 });
+          } catch (e) {
+            if (e.statusCode === 404 || e.statusCode === 410) expired.push(sub.endpoint);
+            else {
+              failed++;
+              console.error(`Telefon bildirimi gönderilemedi: ${e.statusCode ?? ''} ${e.message}`);
+            }
+          }
+        }
+      }
+      return { failed, expired };
+    },
+
+    async flushAdmin() {
+      const to = (process.env.ADMIN_EMAIL ?? '').trim();
+      if (!admin.length) return 0;
+      if (dryRun || !to) {
+        for (const a of admin) console.log(`[yönetici] ${a.subject}\n  ${a.lines.join('\n  ')}`);
+        return 0;
+      }
+      const ok = await sendMail(to, {
+        subject: admin.length === 1 ? `[Yönetici] ${admin[0].subject}` : `[Yönetici] ${admin.length} sistem uyarısı`,
+        text: admin.map((a) => `${a.subject}\n${a.lines.join('\n')}`).join('\n\n'),
+        html: adminHtml(admin),
+      });
+      return ok ? 0 : admin.length;
     },
   };
 }

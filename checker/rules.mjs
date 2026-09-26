@@ -60,6 +60,29 @@ function storeKeys(watch, product, wanted) {
   return keys;
 }
 
+// Diğer renklerde istenen bedenlerden stokta olanlar: "Renk|Beden"
+function colorKeys(watch, product, wanted) {
+  if (!watch.other_colors || !product.colors) return null;
+  const keys = [];
+  for (const color of product.colors) {
+    if (color.current) continue;
+    for (const size of color.sizes) {
+      if (size.available && (!wanted.length || wanted.includes(normSize(size.name)))) keys.push(`${color.name}|${size.name}`);
+    }
+  }
+  return keys;
+}
+
+export function groupColors(keys) {
+  const byColor = new Map();
+  for (const key of keys ?? []) {
+    const [name, size] = key.split('|');
+    if (!byColor.has(name)) byColor.set(name, { name, sizes: [] });
+    byColor.get(name).sizes.push(size);
+  }
+  return [...byColor.values()];
+}
+
 // ["id|Mağaza|M", "id|Mağaza|L"] -> [{name: "Mağaza", sizes: ["M", "L"]}]
 export function groupStores(keys) {
   const byStore = new Map();
@@ -86,12 +109,14 @@ export function evaluate(watch, product, { now = Date.now(), history = [] } = {}
   const basePrice = rebase ? price : prev.basePrice;
   const target = effectiveTarget(watch, basePrice);
   const stores = storeKeys(watch, product, wanted);
+  const colors = colorKeys(watch, product, wanted);
 
   const state = {
     price,
     available,
     basePrice,
     storeKeys: stores,
+    colorKeys: colors,
     lastStock: { ...(prev?.lastStock ?? {}) },
     lastActivity: prev?.lastActivity ?? watch.last_activity ?? watch.created_at ?? now,
     reminderAt: prev?.reminderAt ?? null,
@@ -112,6 +137,7 @@ export function evaluate(watch, product, { now = Date.now(), history = [] } = {}
       target,
       belowTarget: target != null && price != null && price <= target,
       stores: stores ? groupStores(stores) : null,
+      otherColors: colors?.length ? groupColors(colors) : null,
     });
     state.lastActivity = now;
     return { events, state, pause: false };
@@ -126,6 +152,11 @@ export function evaluate(watch, product, { now = Date.now(), history = [] } = {}
   if (stores && prev.storeKeys) {
     const newStores = stores.filter((k) => !prev.storeKeys.includes(k));
     if (newStores.length) events.push({ type: 'store', stores: groupStores(newStores) });
+  }
+
+  if (colors && prev.colorKeys) {
+    const newColors = colors.filter((k) => !prev.colorKeys.includes(k));
+    if (newColors.length) events.push({ type: 'color', colors: groupColors(newColors) });
   }
 
   if (price != null && prev.price != null && price < prev.price - 0.009 && (target == null || price <= target)) {

@@ -21,6 +21,11 @@ Tamamen ücretsiz servislerle çalışır, bilgisayarının açık olması gerek
 - **Fiyat geçmişi:** Panelde 60 günlük grafik; fiyat düşüş bildiriminde "son 30 günün en düşüğü" ya da
   "indirimden önce fiyat şişirilmiş" uyarısı.
 - **Zara İstanbul mağaza stoğu:** İstenen beden bir İstanbul mağazasında stoğa girince bildirim.
+- **Başka renkte stok:** İstenen beden başka bir renkte stoğa girince bildirim (Zara, Inditex markaları, Hepsiburada, Nike, H&M).
+- **Uygulama ve telefon bildirimi:** Panel ana ekrana eklenebilir (PWA). Hesap menüsünden "Bu cihaza bildirim" açılınca
+  bildirimler ntfy kurmadan doğrudan telefona/bilgisayara gelir. iPhone'da önce Safari → Paylaş → Ana Ekrana Ekle gerekir (iOS 16.4+).
+- **Paylaş menüsü (Android):** Zara/Trendyol uygulamasında Paylaş → Ürün Takip deyince link ekleme formuna gelir.
+- **Ben de takip et:** "Herkes" sekmesinde arkadaşının ürününü tek dokunuşla kendi listene eklersin.
 - **Beden seçimi:** Bilinen üründe link yapıştırınca bedenler düğme olarak çıkar; kartlardaki bedenlere dokunarak değiştirilir.
 - **Düzenleme / durdurma:** Hedef, hızlı takip, mağaza stoğu ve durdurma panelden değiştirilir.
 - **E-postadan tek tık:** "Takibi bırak" ve hatırlatmadaki "Takibe devam et" linkleri giriş gerektirmez.
@@ -65,6 +70,16 @@ GitHub'da `urun-takip` projesi → **Settings** → **Secrets and variables** �
 | `GMAIL_USER` | Bot Gmail adresi |
 | `GMAIL_APP_PASSWORD` | Gmail uygulama şifresi (16 harf) |
 | `ADMIN_EMAIL` | Sistem uyarılarının gideceği kendi e-posta adresin |
+| `VAPID_PRIVATE_KEY` | Telefon bildirimlerinin gizli imza anahtarı (aşağıya bak) |
+
+### Telefon bildirimi anahtarı
+Anahtar çifti bir kez üretilir: herkese açık olanı `worker/wrangler.toml` içindeki `VAPID_PUBLIC_KEY`, gizli olanı `VAPID_PRIVATE_KEY` secret'ı.
+Yeniden üretmek gerekirse (eski abonelikler geçersiz olur, herkes bildirimi tekrar açmalı):
+
+```bash
+npx web-push generate-vapid-keys --json > .yerel/vapid.json
+node -p "require('./.yerel/vapid.json').privateKey" | clip     # gizli anahtarı panoya kopyalar (Windows)
+```
 
 ### 5. Paneli yükle
 1. **Actions** → soldan **Paneli yükle** → **Run workflow**.

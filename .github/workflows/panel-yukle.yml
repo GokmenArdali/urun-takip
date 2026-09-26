@@ -54,7 +54,8 @@ jobs:
           PANEL_PASSWORD: ${{ secrets.PANEL_PASSWORD }}
           API_TOKEN: ${{ secrets.API_TOKEN }}
           DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
         run: |
-          node -e 'const s={};for(const k of ["PANEL_PASSWORD","API_TOKEN","DISPATCH_TOKEN"]){if(!process.env[k])throw new Error(k+" GitHub Secrets içinde yok");s[k]=process.env[k].trim()}require("fs").writeFileSync("/tmp/gizli.json",JSON.stringify(s))'
+          node -e 'const s={};for(const k of ["PANEL_PASSWORD","API_TOKEN","DISPATCH_TOKEN"]){if(!process.env[k])throw new Error(k+" GitHub Secrets içinde yok");s[k]=process.env[k].trim()}if(process.env.VAPID_PRIVATE_KEY)s.VAPID_PRIVATE_KEY=process.env.VAPID_PRIVATE_KEY.trim();require("fs").writeFileSync("/tmp/gizli.json",JSON.stringify(s))'
           npx wrangler secret bulk /tmp/gizli.json
           rm -f /tmp/gizli.json
