@@ -8,6 +8,7 @@ account_id = "72735b841146c0fb467484e10108e28e"
 binding = "DB"
 database_name = "urun-takip"
 database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
 
 # Her 5 dakikada bir, kontrol zamanı gelen ürün varsa GitHub'daki kontrol programını çalıştırır
 [triggers]

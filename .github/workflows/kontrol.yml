@@ -36,6 +36,7 @@ jobs:
           PANEL_URL: ${{ secrets.API_URL }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           CHECK_ALL: ${{ inputs.hepsi && '1' || '0' }}
         # Zara ve Inditex siteleri görünmez tarayıcıyı engelliyor, sanal ekranda gerçek Chrome açıyoruz
         run: xvfb-run --auto-servernum npm run kontrol

@@ -1,15 +1,8 @@
 // Tanımadığımız siteler: önce Akinon JSON'u dener, olmazsa sayfadaki standart ürün bilgisini
 // (schema.org JSON-LD) okur. Bu durumda beden takibi olmaz, sadece fiyat ve genel stok.
-import { explainFailure, open, poll, withPage } from '../browser.mjs';
+import { explainFailure, ldJsonTexts, ogImage, open, poll, withPage } from '../browser.mjs';
 import { fetchAkinon, parseAkinon } from './akinon.mjs';
-
-function findProduct(node) {
-  if (!node || typeof node !== 'object') return null;
-  if (Array.isArray(node)) return node.map(findProduct).find(Boolean) ?? null;
-  const type = [].concat(node['@type'] ?? []);
-  if (type.includes('Product') || type.includes('ProductGroup')) return node;
-  return findProduct(node['@graph']);
-}
+import { findLdProduct, firstImage } from './http.mjs';
 
 const inStock = (offer) => /InStock|LimitedAvailability|OnlineOnly|PreSale/i.test(offer?.availability ?? '');
 
@@ -31,13 +24,13 @@ export default {
     return withPage(browser, url, async (page) => {
       await open(page, url);
       const blocks = await poll(async () => {
-        const texts = await page.$$eval('script[type="application/ld+json"]', (els) => els.map((e) => e.textContent));
+        const texts = await ldJsonTexts(page);
         return texts.length ? texts : null;
       }, { timeout: 20000 });
       const product = (blocks ?? [])
         .map((t) => {
           try {
-            return findProduct(JSON.parse(t));
+            return findLdProduct(JSON.parse(t));
           } catch {
             return null;
           }
@@ -53,6 +46,7 @@ export default {
       return {
         title: product.name,
         color: product.color ?? null,
+        image: firstImage(product.image) ?? (await ogImage(page)),
         price: overall.price ?? sizes.find((s) => s.price)?.price ?? null,
         sizes: sizes.length ? sizes : [{ name: 'Standart', available: overall.available, price: overall.price }],
       };

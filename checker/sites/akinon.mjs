@@ -1,18 +1,11 @@
-// FashFed ve Akinon altyapısını kullanan diğer siteler: ürün sayfası ?format=json ile hazır veri veriyor,
+// FashFed, Koton ve Akinon altyapısını kullanan diğer siteler: ürün sayfası ?format=json ile hazır veri veriyor,
 // tarayıcı açmaya gerek yok.
-const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36';
+import { fetchJson } from './http.mjs';
 
 export async function fetchAkinon(url) {
   const u = new URL(url);
   u.searchParams.set('format', 'json');
-  const res = await fetch(u, {
-    headers: { 'User-Agent': USER_AGENT, Accept: 'application/json', 'Accept-Language': 'tr-TR' },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (res.status === 404) throw new Error('Ürün sayfası bulunamadı (kaldırılmış olabilir)');
-  if (!res.ok || !res.headers.get('content-type')?.includes('json')) throw new Error(`Site yanıt vermedi (${res.status})`);
-  const data = await res.json();
+  const data = await fetchJson(u);
   if (!data?.product) throw new Error('Ürün verisi bulunamadı');
   return data;
 }
@@ -22,10 +15,13 @@ export function parseAkinon(data) {
   const sizeAttr = attr(/beden|size|numara/i);
   const colorAttr = attr(/renk|color/i);
   const price = Number(data.product.price);
+  const retail = Number(data.product.retail_price);
   return {
     title: data.product.name,
     color: colorAttr?.options?.find((o) => o.is_selected)?.label ?? null,
+    image: data.product.productimage_set?.[0]?.image ?? null,
     price,
+    listPrice: retail > price ? retail : null,
     sizes: sizeAttr
       ? sizeAttr.options.map((o) => ({
           name: o.label,
@@ -38,7 +34,7 @@ export function parseAkinon(data) {
 
 export default {
   name: 'Akinon',
-  match: (host) => /(^|\.)fashfed\.com$/.test(host),
+  match: (host) => /(^|\.)(fashfed|koton)\.com$/.test(host),
   async check(url) {
     return parseAkinon(await fetchAkinon(url));
   },

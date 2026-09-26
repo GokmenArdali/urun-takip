@@ -13,6 +13,20 @@ Tamamen ücretsiz servislerle çalışır, bilgisayarının açık olması gerek
 
 "Hızlı" işaretli ürünler ~5 dakikada bir, diğerleri ~15 dakikada bir kontrol edilir.
 
+## Özellikler
+
+- **Beden takibi:** Zara, Pull&Bear, Bershka, Stradivarius, Massimo Dutti, Oysho, Lefties, Zara Home, Mango, H&M, Trendyol,
+  Hepsiburada, Boyner, Beymen, FashFed, Koton, LC Waikiki, DeFacto, Nike, Adidas. Diğer sitelerde fiyat ve genel stok.
+- **Hedef:** TL (ör. `1500`) ya da yüzde (ör. `%30`, takibe alındığı andaki fiyata göre). Boşsa her indirimde bildirim.
+- **Fiyat geçmişi:** Panelde 60 günlük grafik; fiyat düşüş bildiriminde "son 30 günün en düşüğü" ya da
+  "indirimden önce fiyat şişirilmiş" uyarısı.
+- **Zara İstanbul mağaza stoğu:** İstenen beden bir İstanbul mağazasında stoğa girince bildirim.
+- **Beden seçimi:** Bilinen üründe link yapıştırınca bedenler düğme olarak çıkar; kartlardaki bedenlere dokunarak değiştirilir.
+- **Düzenleme / durdurma:** Hedef, hızlı takip, mağaza stoğu ve durdurma panelden değiştirilir.
+- **E-postadan tek tık:** "Takibi bırak" ve hatırlatmadaki "Takibe devam et" linkleri giriş gerektirmez.
+- **Kendiliğinden temizlik:** 60 gün bildirim çıkmayan takip için hatırlatma, 7 gün cevap gelmezse takip durdurulur.
+- **Yönetici uyarısı:** Bir sitenin ürünleri toptan okunamazsa ya da bir ürün okunamaz hale gelirse `ADMIN_EMAIL` adresine e-posta.
+
 ## İlk kurulum
 
 ### 1. Cloudflare
@@ -50,6 +64,7 @@ GitHub'da `urun-takip` projesi → **Settings** → **Secrets and variables** �
 | `PANEL_PASSWORD` | Panele giriş şifresi (arkadaşlarınla paylaşacağın) |
 | `GMAIL_USER` | Bot Gmail adresi |
 | `GMAIL_APP_PASSWORD` | Gmail uygulama şifresi (16 harf) |
+| `ADMIN_EMAIL` | Sistem uyarılarının gideceği kendi e-posta adresin |
 
 ### 5. Paneli yükle
 1. **Actions** → soldan **Paneli yükle** → **Run workflow**.
@@ -68,7 +83,8 @@ Arkadaşlarına panel adresini ve şifreyi göndermen yeterli.
 - **Şifreyi değiştirmek:** `PANEL_PASSWORD` secret'ını güncelle → **Paneli yükle**'yi tekrar çalıştır.
 - **GitHub token süresi dolunca:** Panelin üstünde "Kontrol programı başlatılamıyor" uyarısı çıkar. 2. adımdaki gibi yeni token al, `DISPATCH_TOKEN`'ı güncelle, **Paneli yükle**'yi çalıştır. (Bu sürede kontroller saatte bir yedek zamanlamayla devam eder.)
 - **Tüm ürünleri hemen kontrol etmek:** **Actions** → **Kontrol** → **Run workflow** → "tüm ürünler" kutusunu işaretle.
-- **Bir site okunamıyorsa:** Site tasarımını değiştirmiş olabilir; `checker/sites/` altındaki ilgili dosyanın güncellenmesi gerekir.
+- **Bir site okunamıyorsa:** `ADMIN_EMAIL` adresine uyarı gelir. Site tasarımını değiştirmiş olabilir; `checker/sites/` altındaki ilgili dosyanın güncellenmesi gerekir.
+- **Veritabanı değişiklikleri:** `worker/migrations/` altına yeni numaralı `.sql` dosyası eklenir; **Paneli yükle** sırayla uygular.
 
 ## Geliştirme (bilgisayarda deneme)
 
@@ -76,10 +92,11 @@ Arkadaşlarına panel adresini ve şifreyi göndermen yeterli.
 npm ci
 npm test                                   # bildirim kuralları testleri
 node checker/dene.mjs "<ürün linki>"       # tek bir linki okumayı dene (Chrome açılır)
+node checker/dene.mjs --magaza "<Zara linki>"  # mağaza stoğuyla birlikte
 ```
 
 Paneli yerelde çalıştırmak için Node 22+ ve wrangler gerekir (`worker/.dev.vars` içine `PANEL_PASSWORD` ve `API_TOKEN` yaz,
-`npx wrangler d1 execute urun-takip --local --file=schema.sql`, `npx wrangler dev`). Kontrol programını yerel panele karşı
+`npx wrangler d1 migrations apply urun-takip --local`, `npx wrangler dev`). Kontrol programını yerel panele karşı
 bildirim göndermeden çalıştırmak için:
 
 ```bash

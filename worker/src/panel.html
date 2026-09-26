@@ -1,172 +1,322 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0c0d">
+<meta name="robots" content="noindex">
 <title>Ürün Takip</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%230c0c0d'/><path d='M20 18h24v6H35v22h-6V24h-9z' fill='%23d4b98c'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  // Tema boyamadan önce uygulanır (varsayılan koyu)
+  try { if (localStorage.getItem('tema') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
+</script>
 <style>
-  :root {
-    --bg: #f6f6f4; --card: #ffffff; --text: #1b1b1b; --muted: #6b6b6b; --line: #e4e4e0;
-    --accent: #1b1b1b; --accent-text: #ffffff; --ok: #1f8a4c; --ok-bg: #e5f5ec; --no: #8a8a8a; --no-bg: #efefec;
-    --warn: #a15c00; --warn-bg: #fff3dd; --err: #b3261e; --err-bg: #fde8e6; --ring: #3b82f6;
+  :root[data-theme="dark"] {
+    --bg: #0c0c0d; --bg-glow: rgba(212,185,140,.07); --surface: #141416; --surface-2: #1b1b1e; --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.16);
+    --text: #f2efe8; --text-2: #c9c5bc; --muted: #8e8b84; --accent: #d4b98c; --accent-2: #e8d3ad; --accent-ink: #17140f; --accent-soft: rgba(212,185,140,.12);
+    --ok: #86d3a9; --ok-soft: rgba(134,211,169,.12); --warn: #f0c27b; --warn-soft: rgba(240,194,123,.12); --danger: #ec8f80; --danger-soft: rgba(236,143,128,.12);
+    --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 20px 50px -30px rgba(0,0,0,.8); --scrim: rgba(0,0,0,.6);
+    color-scheme: dark;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #121212; --card: #1c1c1c; --text: #ececec; --muted: #9a9a9a; --line: #2e2e2e;
-      --accent: #ececec; --accent-text: #121212; --ok: #4ade80; --ok-bg: #14301f; --no: #8a8a8a; --no-bg: #262626;
-      --warn: #fbbf24; --warn-bg: #33270d; --err: #f87171; --err-bg: #3a1614;
-    }
+  :root[data-theme="light"] {
+    --bg: #f6f4ef; --bg-glow: rgba(154,122,69,.08); --surface: #ffffff; --surface-2: #faf8f4; --line: rgba(23,22,26,.08); --line-strong: rgba(23,22,26,.16);
+    --text: #17161a; --text-2: #3d3a35; --muted: #77736b; --accent: #9a7a45; --accent-2: #7f6436; --accent-ink: #ffffff; --accent-soft: rgba(154,122,69,.1);
+    --ok: #2f7d55; --ok-soft: rgba(47,125,85,.1); --warn: #a86a1c; --warn-soft: rgba(168,106,28,.1); --danger: #b54a3c; --danger-soft: rgba(181,74,60,.1);
+    --shadow: 0 1px 2px rgba(23,22,26,.04), 0 20px 40px -30px rgba(23,22,26,.25); --scrim: rgba(23,22,26,.35);
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
-  h1 { font-size: 22px; margin: 0; }
-  h2 { font-size: 16px; margin: 0 0 12px; }
-  .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-  .muted { color: var(--muted); font-size: 13px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
-  input[type=text], input[type=email], input[type=password], input[type=url] {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
-    background: var(--bg); color: var(--text); font: inherit;
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text); font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: radial-gradient(1200px 600px at 50% -200px, var(--bg-glow), transparent 70%), var(--bg);
+    -webkit-font-smoothing: antialiased;
   }
-  input:focus { outline: 2px solid var(--ring); outline-offset: -1px; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
-  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
-  button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); padding: 9px 14px; }
-  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
-  button.link { border: none; background: none; padding: 0; color: var(--muted); text-decoration: underline; font-size: 13px; }
-  button:disabled { opacity: .5; cursor: default; }
-  .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--text); font-size: 14px; }
-  .actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
-  .msg { font-size: 14px; }
-  .msg.err { color: var(--err); }
-  .msg.ok { color: var(--ok); }
-  .banner { border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: 14px; background: var(--warn-bg); color: var(--warn); }
-  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-  .tabs button { border-radius: 999px; padding: 6px 12px; font-size: 14px; }
-  .tabs button.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-  .item { border-top: 1px solid var(--line); padding: 14px 0; }
-  .item:first-child { border-top: none; padding-top: 0; }
-  .item-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-  .item-title { font-weight: 600; word-break: break-word; }
-  .item-title a { color: inherit; text-decoration: none; }
-  .item-title a:hover { text-decoration: underline; }
-  .meta { color: var(--muted); font-size: 13px; margin-top: 2px; }
-  .price { font-weight: 600; white-space: nowrap; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .chip { font-size: 12.5px; padding: 3px 9px; border-radius: 999px; background: var(--no-bg); color: var(--no); border: 1.5px solid transparent; }
-  .chip.in { background: var(--ok-bg); color: var(--ok); }
-  .chip.want { border-color: currentColor; font-weight: 600; }
-  .chip.missing { background: var(--err-bg); color: var(--err); }
-  .err-line { color: var(--err); font-size: 13px; margin-top: 6px; }
-  .tag { font-size: 12px; padding: 1px 7px; border-radius: 6px; background: var(--no-bg); color: var(--muted); margin-left: 6px; font-weight: 500; }
-  .tag.fast { background: var(--warn-bg); color: var(--warn); }
-  .empty { color: var(--muted); text-align: center; padding: 18px 0; }
+  .serif { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; }
+  a { color: inherit; }
+  button, input { font: inherit; color: inherit; }
   .hidden { display: none !important; }
-  details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 10px; }
-  details p { font-size: 13px; color: var(--muted); margin: 6px 0; }
-  code { background: var(--no-bg); padding: 1px 5px; border-radius: 5px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px calc(64px + env(safe-area-inset-bottom)); }
+  @media (max-width: 560px) { .wrap { padding: 0 16px calc(56px + env(safe-area-inset-bottom)); } }
+
+  /* Üst bar */
+  header { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    background: color-mix(in srgb, var(--bg) 78%, transparent); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1080px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 14px; }
+  @media (max-width: 560px) { .bar { padding: 12px 16px; } }
+  .logo { font-size: 26px; letter-spacing: .2px; white-space: nowrap; }
+  .logo b { color: var(--accent); font-weight: 400; font-style: italic; }
+  .status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin-left: 4px; min-width: 0; }
+  .status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); flex: none; }
+  .status.bad .dot { background: var(--warn); box-shadow: 0 0 0 4px var(--warn-soft); }
+  .status span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spacer { flex: 1; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; cursor: pointer; transition: border-color .2s; flex: none; }
+  .icon-btn:hover { border-color: var(--line-strong); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .avatar { width: 38px; height: 38px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 600; cursor: pointer; border: 1px solid transparent; flex: none; }
+  @media (max-width: 480px) { .status span { display: none; } }
+
+  /* Kartlar ve form öğeleri */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
+  label.field { display: block; }
+  .field > span { display: block; font-size: 12.5px; color: var(--muted); margin: 0 0 6px 2px; }
+  .input { width: 100%; padding: 13px 15px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2); outline: none; transition: border-color .2s, box-shadow .2s; }
+  .input::placeholder { color: var(--muted); opacity: .8; }
+  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; cursor: pointer; font-weight: 500; transition: transform .15s, background .2s, border-color .2s, opacity .2s; white-space: nowrap; }
+  .btn:hover { border-color: var(--text-2); }
+  .btn:active { transform: scale(.98); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+  .btn.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+  .btn.ghost { border-color: transparent; color: var(--muted); padding-left: 10px; padding-right: 10px; }
+  .btn.ghost:hover { color: var(--text); }
+  .btn:disabled { opacity: .5; cursor: default; transform: none; }
+  .btn.small { padding: 8px 14px; font-size: 13.5px; }
+  .toggle { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; user-select: none; }
+  .toggle input { position: absolute; opacity: 0; pointer-events: none; }
+  .toggle .sw { width: 38px; height: 22px; border-radius: 999px; background: var(--line-strong); position: relative; flex: none; transition: background .2s; }
+  .toggle .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--text); transition: transform .2s; }
+  .toggle input:checked + .sw { background: var(--accent); }
+  .toggle input:checked + .sw::after { transform: translateX(16px); background: var(--accent-ink); }
+  .toggle b { display: block; font-weight: 500; font-size: 14px; }
+  .toggle small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); }
+  .seg button { border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; cursor: pointer; color: var(--muted); font-size: 13.5px; font-weight: 500; }
+  .seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  :root[data-theme="light"] .seg button.on { background: var(--text); color: var(--bg); }
+
+  /* Beden çipleri */
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { min-width: 40px; padding: 6px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 13px; font-weight: 500; text-align: center; transition: border-color .15s, color .15s, background .15s; }
+  .chip.in { color: var(--text); border-color: var(--line-strong); }
+  .chip.out { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); opacity: .75; }
+  .chip.want { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); opacity: 1; }
+  .chip.want.in { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+  .chip.missing { border-style: dashed; border-color: var(--danger); color: var(--danger); background: var(--danger-soft); }
+  button.chip { cursor: pointer; }
+  button.chip:hover { border-color: var(--accent); }
+  .chip.all { border-style: dashed; }
+
+  /* Giriş ve ilk kurulum */
+  .center { min-height: calc(100vh - 80px); display: grid; place-items: center; padding: 40px 0; }
+  .auth { width: 100%; max-width: 420px; padding: 34px 30px; text-align: center; }
+  .auth h1 { font-size: 44px; line-height: 1.05; margin: 0 0 8px; }
+  .auth p { color: var(--muted); margin: 0 0 26px; }
+  .auth form { display: grid; gap: 14px; text-align: left; }
+  .msg { font-size: 13.5px; min-height: 1em; }
+  .msg.err { color: var(--danger); }
+  .msg.ok { color: var(--ok); }
+
+  /* Ürün ekleme */
+  .hero { padding: 42px 0 18px; }
+  .hero h1 { font-size: clamp(38px, 6vw, 60px); line-height: 1; margin: 0 0 10px; letter-spacing: -.5px; }
+  .hero h1 i { color: var(--accent); }
+  .hero p { color: var(--muted); margin: 0; max-width: 560px; }
+  .add { padding: 22px; margin-top: 24px; }
+  @media (max-width: 560px) { .add { padding: 18px; border-radius: 20px; } .hero { padding-top: 30px; } }
+  .url-row { display: flex; gap: 10px; }
+  .url-row .input { font-size: 15.5px; padding: 15px 17px; }
+  @media (max-width: 560px) { .url-row { flex-direction: column; } .url-row .btn { width: 100%; padding: 14px; } }
+  .preview { display: flex; gap: 14px; align-items: center; margin-top: 16px; padding: 12px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--line); }
+  .preview img, .preview .ph { width: 52px; height: 66px; border-radius: 10px; object-fit: cover; background: var(--line); flex: none; }
+  .preview .t { font-weight: 500; font-size: 14px; }
+  .preview .s { color: var(--muted); font-size: 12.5px; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+  .opts .full { grid-column: 1 / -1; }
+  @media (max-width: 720px) { .opts { grid-template-columns: 1fr; } }
+  .target-row { display: flex; gap: 8px; align-items: center; }
+  .target-row .input { flex: 1; min-width: 0; }
+  .hint { color: var(--muted); font-size: 12.5px; margin: 8px 2px 0; }
+  .add-foot { display: flex; align-items: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+  .add-foot .msg { flex: 1; min-width: 200px; }
+  .sites { color: var(--muted); font-size: 12.5px; margin-top: 14px; line-height: 1.6; }
+
+  /* Liste */
+  .list-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 44px 0 16px; flex-wrap: wrap; }
+  .list-head h2 { font-size: 34px; margin: 0; line-height: 1; }
+  .list-head .count { color: var(--muted); font-size: 14px; margin-left: 10px; font-family: Inter, sans-serif; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .item { padding: 18px; display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden; }
+  .item.paused { opacity: .62; }
+  .item-top { display: flex; gap: 16px; }
+  .thumb { width: 92px; height: 116px; border-radius: 14px; object-fit: cover; background: var(--surface-2); flex: none; border: 1px solid var(--line); }
+  .thumb.ph { display: grid; place-items: center; color: var(--muted); font-size: 22px; }
+  @media (max-width: 400px) { .thumb { width: 76px; height: 96px; } }
+  .info { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+  .site { display: flex; align-items: center; gap: 8px; }
+  .tag { font-size: 10.5px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+  .tag.fast { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+  .tag.store { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+  .tag.pause { color: var(--text-2); }
+  .name { font-family: "Instrument Serif", Georgia, serif; font-size: 22px; line-height: 1.15; margin: 7px 0 2px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .name a { text-decoration: none; }
+  .name a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .sub { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .price-row { display: flex; align-items: baseline; gap: 8px; margin-top: auto; padding-top: 8px; flex-wrap: wrap; }
+  .price { font-size: 21px; font-weight: 600; letter-spacing: -.2px; }
+  .old { color: var(--muted); text-decoration: line-through; font-size: 13.5px; }
+  .off { font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--text); color: var(--bg); }
+  .spark { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+  .spark svg { flex: 1; height: 38px; min-width: 0; overflow: visible; }
+  .spark .meta { font-size: 11.5px; color: var(--muted); text-align: right; line-height: 1.35; white-space: nowrap; }
+  .spark .meta b { color: var(--text-2); font-weight: 500; }
+  .spark.empty { color: var(--muted); font-size: 12.5px; justify-content: center; }
+  .note { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+  .note.err { color: var(--danger); }
+  .note.ok { color: var(--ok); }
+  .stores summary { cursor: pointer; font-size: 13px; color: var(--accent); list-style: none; }
+  .stores summary::-webkit-details-marker { display: none; }
+  .stores ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
+  .stores li { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 7px 10px; border-radius: 10px; background: var(--surface-2); }
+  .stores li span:last-child { color: var(--muted); text-align: right; }
+  .item-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; margin-top: -2px; }
+  .item-foot .when { font-size: 12.5px; color: var(--muted); }
+  .item-foot .acts { display: flex; gap: 4px; }
+  .shimmer { position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, var(--accent-soft) 50%, transparent 70%); background-size: 200% 100%; animation: sh 1.6s infinite; pointer-events: none; }
+  @keyframes sh { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+  .empty { padding: 48px 20px; text-align: center; color: var(--muted); grid-column: 1 / -1; }
+  .empty .serif { font-size: 28px; color: var(--text); display: block; margin-bottom: 6px; }
+
+  /* Pencere (mobilde alttan açılır) */
+  .scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; opacity: 0; transition: opacity .2s; }
+  .scrim.show { opacity: 1; }
+  .sheet { position: fixed; z-index: 41; left: 50%; top: 50%; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; transform: translate(-50%, -48%); opacity: 0; transition: transform .22s, opacity .22s; padding: 24px; }
+  .sheet.show { transform: translate(-50%, -50%); opacity: 1; }
+  .sheet h3 { font-size: 28px; margin: 0 0 4px; line-height: 1.1; }
+  .sheet .sub { margin-bottom: 18px; white-space: normal; }
+  .sheet .stack { display: grid; gap: 12px; }
+  .sheet .row-btns { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .sheet .row-btns .btn { flex: 1; }
+  @media (max-width: 560px) {
+    .sheet { left: 0; right: 0; top: auto; bottom: 0; width: 100%; max-height: 88vh; transform: translateY(100%); border-radius: 24px 24px 0 0; padding: 22px 18px calc(22px + env(safe-area-inset-bottom)); opacity: 1; }
+    .sheet.show { transform: translateY(0); }
+    .sheet::before { content: ""; display: block; width: 40px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: -8px auto 16px; }
+  }
+
+  /* Bildirim balonu */
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); opacity: 0; z-index: 60; background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; transition: transform .25s, opacity .25s; pointer-events: none; max-width: calc(100vw - 32px); text-align: center; }
+  .toast.show { transform: translate(-50%, 0); opacity: 1; }
+  .toast.err { background: var(--danger); color: #fff; }
+
+  .menu { position: absolute; right: 20px; top: 62px; z-index: 30; min-width: 230px; padding: 8px; }
+  .menu .who { padding: 10px 12px 12px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+  .menu .who b { display: block; }
+  .menu .who span { color: var(--muted); font-size: 12.5px; word-break: break-all; }
+  .menu button { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 10px; border: 0; background: transparent; cursor: pointer; font-size: 14px; }
+  .menu button:hover { background: var(--surface-2); }
+  details.help summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  details.help p { color: var(--muted); font-size: 13px; margin: 8px 0; }
+  code { background: var(--surface-2); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; font-size: 12.5px; }
 </style>
 </head>
 <body>
-<main>
-  <div class="top">
-    <h1>🏷️ Ürün Takip</h1>
-    <button class="link hidden" id="logout">Çıkış</button>
+<header>
+  <div class="bar">
+    <div class="logo serif">Ürün <b>Takip</b></div>
+    <div class="status hidden" id="status"><i class="dot"></i><span id="status-text"></span></div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="theme" type="button" aria-label="Temayı değiştir" title="Açık / koyu tema"></button>
+    <div class="avatar hidden" id="avatar" role="button" tabindex="0" aria-label="Hesap menüsü"></div>
   </div>
+</header>
+<div class="menu card hidden" id="menu">
+  <div class="who"><b id="menu-name"></b><span id="menu-contact"></span></div>
+  <button type="button" id="menu-profile">Bilgilerimi düzenle</button>
+  <button type="button" id="menu-logout">Çıkış yap</button>
+</div>
 
+<main class="wrap">
   <!-- Giriş -->
-  <section class="card hidden" id="login">
-    <h2>Giriş</h2>
-    <form id="login-form">
-      <label for="password">Panel şifresi</label>
-      <input type="password" id="password" autocomplete="current-password" required>
-      <div class="actions">
-        <button class="primary" type="submit">Giriş yap</button>
-        <span class="msg err" id="login-msg"></span>
-      </div>
-    </form>
+  <section class="center hidden" id="login">
+    <div class="card auth">
+      <h1 class="serif">Hoş geldin</h1>
+      <p>Takip listesine girmek için panel şifresini yaz.</p>
+      <form id="login-form">
+        <label class="field"><span>Panel şifresi</span><input class="input" type="password" id="password" autocomplete="current-password" required></label>
+        <button class="btn primary" type="submit">Giriş yap</button>
+        <div class="msg err" id="login-msg"></div>
+      </form>
+    </div>
   </section>
 
-  <div id="app" class="hidden">
-    <div class="banner hidden" id="banner"></div>
-
-    <!-- Profil -->
-    <section class="card" id="profile">
-      <h2>Bilgilerin</h2>
-      <div id="profile-view" class="hidden">
-        <div id="profile-summary"></div>
-        <div class="actions"><button class="link" id="profile-edit">Değiştir</button></div>
-      </div>
+  <!-- Bilgiler (ilk kurulum / düzenleme) -->
+  <section class="center hidden" id="profile">
+    <div class="card auth">
+      <h1 class="serif">Seni tanıyalım</h1>
+      <p>Bildirimlerin nereye geleceğini seç. Bu bilgiler sadece bu cihazda saklanır.</p>
       <form id="profile-form">
-        <p class="muted" style="margin:0">Bildirimler buraya gelecek. Bu bilgiler sadece bu tarayıcıda saklanır.</p>
-        <div class="row">
-          <div>
-            <label for="owner">Adın</label>
-            <input type="text" id="owner" maxlength="40" required>
-          </div>
-          <div>
-            <label for="email">E-posta</label>
-            <input type="email" id="email" maxlength="120" placeholder="ornek@gmail.com">
-          </div>
-        </div>
-        <label for="ntfy">ntfy konusu (isteğe bağlı, telefona anında bildirim için)</label>
-        <input type="text" id="ntfy" maxlength="64" placeholder="boş bırakabilirsin">
-        <details>
-          <summary>ntfy nedir, nasıl kurulur?</summary>
-          <p>ntfy, hesap açmadan telefona bildirim gönderen ücretsiz bir uygulama. E-postadan daha hızlı haber alırsın.</p>
-          <p>1. Aşağıdaki butonla sana özel bir konu adı oluştur. 2. Telefona <b>ntfy</b> uygulamasını kur (App Store / Google Play). 3. Uygulamada <b>+</b>'ya bas ve bu konu adını yaz.</p>
-          <p>Konu adını bilen herkes bildirimlerini görebilir, o yüzden tahmin edilemez bir ad kullan.</p>
-          <button type="button" id="ntfy-gen">Rastgele konu adı oluştur</button>
+        <label class="field"><span>Adın</span><input class="input" id="owner" maxlength="40" required autocomplete="given-name"></label>
+        <label class="field"><span>E-posta</span><input class="input" type="email" id="email" maxlength="120" placeholder="ornek@gmail.com" autocomplete="email"></label>
+        <label class="field"><span>ntfy konusu (isteğe bağlı)</span><input class="input" id="ntfy" maxlength="64" placeholder="Telefona anında bildirim için"></label>
+        <details class="help">
+          <summary>ntfy nedir?</summary>
+          <p>Hesap açmadan telefona anında bildirim gönderen ücretsiz bir uygulama. Telefona <b>ntfy</b>'yi kur, uygulamada <b>+</b>'ya basıp buradaki konu adını yaz.</p>
+          <p>Konu adını bilen herkes bildirimlerini görebilir; tahmin edilemez bir ad kullan.</p>
+          <button class="btn small" type="button" id="ntfy-gen">Rastgele konu adı oluştur</button>
         </details>
-        <div class="actions">
-          <button class="primary" type="submit">Kaydet</button>
-          <span class="msg err" id="profile-msg"></span>
+        <button class="btn primary" type="submit">Kaydet</button>
+        <div class="msg err" id="profile-msg"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Ana ekran -->
+  <div id="app" class="hidden">
+    <section class="hero">
+      <div class="eyebrow">Fiyat ve stok takibi</div>
+      <h1 class="serif" style="margin-top:10px">İstediğin bedeni <i>kaçırma.</i></h1>
+      <p>Linki yapıştır, bedenini seç. Stoğa girince ya da fiyatı düşünce ilk sen haberdar ol.</p>
+
+      <form class="card add" id="add-form" autocomplete="off">
+        <div class="url-row">
+          <input class="input" type="url" id="url" required placeholder="Ürün linkini yapıştır…" inputmode="url">
+          <button class="btn primary" type="submit" id="add-btn">Takibe al</button>
         </div>
+        <div class="preview hidden" id="preview"></div>
+        <div class="opts">
+          <div class="field full">
+            <span>Beden</span>
+            <div id="size-picker"></div>
+          </div>
+          <div class="field">
+            <span>Hedef (isteğe bağlı)</span>
+            <div class="target-row">
+              <input class="input" id="target" inputmode="decimal" placeholder="Boşsa her indirimde haber ver">
+              <div class="seg" id="target-mode"><button type="button" data-mode="tl" class="on">TL</button><button type="button" data-mode="pct">%</button></div>
+            </div>
+            <div class="hint" id="target-hint">Fiyat bu tutarın altına inince haber veririm.</div>
+          </div>
+          <div class="stack" style="display:grid;gap:10px">
+            <label class="toggle"><input type="checkbox" id="fast"><i class="sw"></i><div><b>Hızlı takip</b><small>5 dakikada bir kontrol — kapışılan ürünler için</small></div></label>
+            <label class="toggle hidden" id="store-toggle"><input type="checkbox" id="store"><i class="sw"></i><div><b>İstanbul mağazaları</b><small>İstediğin beden bir mağazada stoğa girince haber ver</small></div></label>
+          </div>
+        </div>
+        <div class="add-foot"><div class="msg" id="add-msg"></div></div>
+        <div class="sites">Beden takibi: Zara · Pull&amp;Bear · Bershka · Stradivarius · Massimo Dutti · Oysho · Mango · H&amp;M · Trendyol · Hepsiburada · Boyner · Beymen · FashFed · Koton · LC Waikiki · DeFacto · Nike · Adidas. Diğer sitelerde fiyat ve genel stok takip edilir.</div>
       </form>
     </section>
 
-    <!-- Ürün ekle -->
-    <section class="card" id="add">
-      <h2>Ürün ekle</h2>
-      <form id="add-form">
-        <label for="url">Ürün linki</label>
-        <input type="url" id="url" required placeholder="https://www.zara.com/tr/tr/...">
-        <div class="row">
-          <div>
-            <label for="sizes">Beden(ler)</label>
-            <input type="text" id="sizes" placeholder="ör. M veya M, L — boşsa tüm bedenler">
-          </div>
-          <div>
-            <label for="target">Hedef fiyat (TL, isteğe bağlı)</label>
-            <input type="text" id="target" inputmode="decimal" placeholder="ör. 1500">
-          </div>
-        </div>
-        <label class="check"><input type="checkbox" id="fast"> Hızlı takip (5 dakikada bir kontrol, kapışılan ürünler için)</label>
-        <p class="muted" style="margin:8px 0 0">
-          Hedef fiyat girersen sadece fiyat o tutarın altına inince haber verilir; boşsa her indirimde haber verilir.
-          Beden takibi: Zara, Pull&amp;Bear, Bershka, Stradivarius, Massimo Dutti, Oysho, Trendyol, Hepsiburada, FashFed.
-          Diğer sitelerde sadece fiyat ve genel stok takip edilir.
-        </p>
-        <div class="actions">
-          <button class="primary" type="submit" id="add-btn">Takibe al</button>
-          <span class="msg" id="add-msg"></span>
-        </div>
-      </form>
-    </section>
-
-    <!-- Liste -->
-    <section class="card">
-      <div class="tabs">
-        <button type="button" data-tab="mine" class="on">Benim takiplerim</button>
-        <button type="button" data-tab="all">Herkes</button>
+    <section>
+      <div class="list-head">
+        <h2 class="serif">Takip listesi<span class="count" id="count"></span></h2>
+        <div class="seg" id="tabs"><button type="button" data-tab="mine" class="on">Benim</button><button type="button" data-tab="all">Herkes</button></div>
       </div>
-      <div id="list"></div>
+      <div class="grid" id="list"></div>
     </section>
   </div>
 </main>
+
+<div class="scrim hidden" id="scrim"></div>
+<div class="sheet card hidden" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"></div>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -178,20 +328,37 @@ let profile = store.get('profile') || {};
 let tab = store.get('tab') || 'mine';
 let watches = [];
 let statusInfo = null;
+let preview = null;          // yapıştırılan linkin bilinen bilgileri
+let pickedSizes = new Set(); // ekleme formunda seçilen bedenler
+let targetMode = 'tl';
+let pollTimer = null;
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const tl = (n) => n == null ? '' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(n);
+const tl = (n) => n == null ? '' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: n % 1 ? 2 : 0 }).format(n);
 const norm = (s) => {
   const x = String(s ?? '').toLocaleUpperCase('tr-TR').replace(/\(.*?\)/g, ' ').replace(/,/g, '.').replace(/\s+/g, ' ').trim();
   return ({ XXL: '2XL', XXXL: '3XL', XXXXL: '4XL', 'TEK EBAT': 'STANDART', 'TEK BEDEN': 'STANDART', STD: 'STANDART' })[x] || x;
 };
 function ago(ms) {
-  if (!ms) return 'henüz kontrol edilmedi';
+  if (!ms) return null;
   const m = Math.round((Date.now() - ms) / 60000);
   if (m < 1) return 'az önce';
   if (m < 60) return `${m} dk önce`;
   const h = Math.round(m / 60);
   return h < 24 ? `${h} saat önce` : `${Math.round(h / 24)} gün önce`;
+}
+const ICONS = {
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+};
+
+let toastTimer;
+function toast(text, isErr) {
+  const t = $('toast');
+  t.textContent = text;
+  t.className = `toast show${isErr ? ' err' : ''}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.className = 'toast'), 2600);
 }
 
 async function api(path, opts = {}) {
@@ -201,100 +368,163 @@ async function api(path, opts = {}) {
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401 && !opts.allow401) { showLogin(); throw new Error(data.error || 'Giriş yapmalısın'); }
+  if (res.status === 401 && !opts.allow401) { show('login'); throw new Error(data.error || 'Giriş yapmalısın'); }
   if (!res.ok) throw new Error(data.error || `Hata (${res.status})`);
   return data;
 }
-
 function contactQuery() {
   const p = new URLSearchParams();
   if (profile.email) p.set('email', profile.email);
   if (profile.ntfy) p.set('ntfy', profile.ntfy);
   return p.toString();
 }
+const hasProfile = () => profile.owner && (profile.email || profile.ntfy);
 
-// ---------- Giriş ----------
-function showLogin() {
-  $('login').classList.remove('hidden');
-  $('app').classList.add('hidden');
-  $('logout').classList.add('hidden');
+// ---------- Tema ----------
+function renderTheme() {
+  const dark = document.documentElement.dataset.theme !== 'light';
+  $('theme').innerHTML = dark ? ICONS.sun : ICONS.moon;
+  document.querySelector('meta[name=theme-color]').content = dark ? '#0c0c0d' : '#f6f4ef';
 }
-function showApp() {
-  $('login').classList.add('hidden');
-  $('app').classList.remove('hidden');
-  $('logout').classList.remove('hidden');
+$('theme').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('tema', next); } catch {}
+  renderTheme();
+});
+renderTheme();
+
+// ---------- Ekranlar ----------
+function show(view) {
+  for (const id of ['login', 'profile', 'app']) $(id).classList.toggle('hidden', id !== view);
+  const inApp = view !== 'login';
+  $('avatar').classList.toggle('hidden', !inApp || !hasProfile());
+  $('status').classList.toggle('hidden', view !== 'app');
+  $('menu').classList.add('hidden');
 }
+
 $('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('login-msg').textContent = '';
   try {
     await api('/api/login', { method: 'POST', body: { password: $('password').value }, allow401: true });
     $('password').value = '';
-    showApp();
-    renderProfile();
-    refresh();
+    start();
   } catch (err) { $('login-msg').textContent = err.message; }
-});
-$('logout').addEventListener('click', async () => {
-  await api('/api/logout', { method: 'POST', body: {} }).catch(() => {});
-  showLogin();
 });
 
 // ---------- Profil ----------
-function renderProfile() {
-  const has = profile.owner && (profile.email || profile.ntfy);
-  $('profile-form').classList.toggle('hidden', !!has);
-  $('profile-view').classList.toggle('hidden', !has);
-  $('add').classList.toggle('hidden', !has);
+function openProfile() {
   $('owner').value = profile.owner || '';
   $('email').value = profile.email || '';
   $('ntfy').value = profile.ntfy || '';
-  if (has) {
-    const parts = [profile.email && `📧 ${esc(profile.email)}`, profile.ntfy && `🔔 ntfy: <code>${esc(profile.ntfy)}</code>`].filter(Boolean);
-    $('profile-summary').innerHTML = `<b>${esc(profile.owner)}</b><div class="muted">${parts.join(' · ')}</div>`;
-  }
+  $('profile-msg').textContent = '';
+  show('profile');
 }
 $('profile-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const next = { owner: $('owner').value.trim(), email: $('email').value.trim().toLowerCase(), ntfy: $('ntfy').value.trim() };
   if (!next.email && !next.ntfy) { $('profile-msg').textContent = 'E-posta ya da ntfy konusundan en az birini gir.'; return; }
   if (next.ntfy && !/^[A-Za-z0-9_-]{6,64}$/.test(next.ntfy)) { $('profile-msg').textContent = 'ntfy konusu en az 6 karakter olmalı; sadece harf, rakam, - ve _.'; return; }
-  $('profile-msg').textContent = '';
   profile = next;
   store.set('profile', profile);
-  renderProfile();
+  renderAvatar();
+  show('app');
   refresh();
-});
-$('profile-edit').addEventListener('click', () => {
-  $('profile-form').classList.remove('hidden');
-  $('profile-view').classList.add('hidden');
 });
 $('ntfy-gen').addEventListener('click', () => {
   const rand = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 10);
   const base = ($('owner').value || 'takip').toLocaleLowerCase('tr-TR').replace(/[^a-z0-9]/g, '').slice(0, 12) || 'takip';
   $('ntfy').value = `urun-${base}-${rand}`;
 });
+function renderAvatar() {
+  $('avatar').textContent = (profile.owner || '?').trim().charAt(0).toLocaleUpperCase('tr-TR');
+  $('menu-name').textContent = profile.owner || '';
+  $('menu-contact').textContent = [profile.email, profile.ntfy && `ntfy: ${profile.ntfy}`].filter(Boolean).join(' · ');
+}
+$('avatar').addEventListener('click', (e) => { e.stopPropagation(); $('menu').classList.toggle('hidden'); });
+document.addEventListener('click', (e) => { if (!$('menu').contains(e.target)) $('menu').classList.add('hidden'); });
+$('menu-profile').addEventListener('click', openProfile);
+$('menu-logout').addEventListener('click', async () => {
+  await api('/api/logout', { method: 'POST', body: {} }).catch(() => {});
+  show('login');
+});
 
 // ---------- Ürün ekleme ----------
+function renderSizePicker() {
+  const box = $('size-picker');
+  const sizes = preview?.sizes;
+  if (sizes?.length) {
+    const chips = sizes.map((s) => {
+      const on = pickedSizes.has(s.name);
+      return `<button type="button" class="chip ${s.available ? 'in' : 'out'} ${on ? 'want' : ''}" data-size="${esc(s.name)}" title="${s.available ? 'Stokta' : 'Stokta yok'}">${esc(s.name)}</button>`;
+    });
+    box.innerHTML = `<div class="chips">${chips.join('')}</div><div class="hint">${pickedSizes.size ? `${pickedSizes.size} beden seçildi` : 'Seçmezsen tüm bedenler takip edilir'} · üstü çizili olanlar şu an tükenmiş</div>`;
+    box.querySelectorAll('[data-size]').forEach((b) => b.addEventListener('click', () => {
+      const n = b.dataset.size;
+      pickedSizes.has(n) ? pickedSizes.delete(n) : pickedSizes.add(n);
+      renderSizePicker();
+    }));
+  } else {
+    const current = box.querySelector('input')?.value ?? '';
+    box.innerHTML = `<input class="input" id="sizes" placeholder="ör. M veya M, L — boşsa tüm bedenler" value="${esc(current)}"><div class="hint">Ürün ilk kontrol edildikten sonra bedenleri listeden tıklayarak da seçebilirsin.</div>`;
+  }
+}
+function renderPreview() {
+  const box = $('preview');
+  $('store-toggle').classList.toggle('hidden', !preview?.store_stock_supported);
+  if (!preview?.known) { box.classList.add('hidden'); renderSizePicker(); return; }
+  box.classList.remove('hidden');
+  box.innerHTML = `${preview.image ? `<img src="${esc(preview.image)}" alt="">` : '<div class="ph"></div>'}
+    <div><div class="t">${esc(preview.title)}</div><div class="s">${esc(preview.site)}${preview.color ? ` · ${esc(preview.color)}` : ''}${preview.price ? ` · ${tl(preview.price)}` : ''}</div></div>`;
+  renderSizePicker();
+}
+let previewTimer;
+$('url').addEventListener('input', () => {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(async () => {
+    const url = $('url').value.trim();
+    pickedSizes = new Set();
+    if (!/^https?:\/\/\S+\.\S+/.test(url)) { preview = null; renderPreview(); return; }
+    try { preview = await api(`/api/product?url=${encodeURIComponent(url)}`); } catch { preview = null; }
+    renderPreview();
+  }, 350);
+});
+$('target-mode').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  targetMode = b.dataset.mode;
+  $('target-mode').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+  $('target').placeholder = targetMode === 'pct' ? 'ör. 30 — %30 indirimde haber ver' : 'Boşsa her indirimde haber ver';
+  $('target-hint').textContent = targetMode === 'pct' ? 'Fiyat, takibe aldığın andaki fiyattan bu oranda düşünce haber veririm.' : 'Fiyat bu tutarın altına inince haber veririm.';
+});
+function targetValue(raw, mode) {
+  const v = String(raw ?? '').replace('%', '').trim();
+  return v ? (mode === 'pct' ? `%${v}` : v) : '';
+}
 $('add-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const msg = $('add-msg');
   msg.className = 'msg';
   msg.textContent = 'Ekleniyor…';
   $('add-btn').disabled = true;
+  const sizes = preview?.sizes?.length ? [...pickedSizes] : ($('sizes')?.value ?? '');
   try {
     await api('/api/watches', {
       method: 'POST',
       body: {
-        url: $('url').value, sizes: $('sizes').value, target_price: $('target').value, fast: $('fast').checked,
-        owner: profile.owner, email: profile.email, ntfy: profile.ntfy,
+        url: $('url').value, sizes, target: targetValue($('target').value, targetMode), fast: $('fast').checked,
+        store_stock: $('store').checked, owner: profile.owner, email: profile.email, ntfy: profile.ntfy,
       },
     });
     $('add-form').reset();
+    preview = null; pickedSizes = new Set();
+    renderPreview();
     msg.className = 'msg ok';
-    msg.textContent = 'Eklendi! Birkaç dakika içinde ilk kontrol yapılıp sana "Takip başladı" bildirimi gelecek.';
+    msg.textContent = 'Takibe alındı. İlk kontrol birkaç dakika içinde yapılacak.';
+    setTimeout(() => { if (msg.textContent.startsWith('Takibe alındı')) msg.textContent = ''; }, 6000);
     tab = 'mine'; store.set('tab', tab);
-    refresh();
+    await refresh();
   } catch (err) {
     msg.className = 'msg err';
     msg.textContent = err.message;
@@ -304,75 +534,214 @@ $('add-form').addEventListener('submit', async (e) => {
 });
 
 // ---------- Liste ----------
-document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => {
+$('tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
   tab = b.dataset.tab; store.set('tab', tab); renderList();
-}));
+});
+
+function sparkline(history, current) {
+  const pts = history.map(([d, p]) => [d, p]);
+  if (current != null) pts.push([Date.now() / 86400000, current]);
+  if (pts.length < 2) return '<div class="spark empty">Fiyat geçmişi birikiyor — birkaç gün içinde grafik burada</div>';
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const [x0, x1] = [Math.min(...xs), Math.max(...xs)], [y0, y1] = [Math.min(...ys), Math.max(...ys)];
+  const W = 200, H = 38, px = (x) => ((x - x0) / (x1 - x0 || 1)) * W, py = (y) => H - 3 - ((y - y0) / (y1 - y0 || 1)) * (H - 6);
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${px(p[0]).toFixed(1)},${py(p[1]).toFixed(1)}`).join(' ');
+  const last = pts[pts.length - 1];
+  const trend = last[1] <= y0 ? 'var(--ok)' : 'var(--accent)';
+  return `<div class="spark">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <path d="${d} L${W},${H} L0,${H} Z" fill="${trend}" opacity=".08"/>
+      <path d="${d}" fill="none" stroke="${trend}" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+      <circle cx="${px(last[0]).toFixed(1)}" cy="${py(last[1]).toFixed(1)}" r="2.6" fill="${trend}"/>
+    </svg>
+    <div class="meta">En düşük <b>${tl(y0)}</b><br>En yüksek <b>${tl(y1)}</b></div>
+  </div>`;
+}
 
 function sizeChips(w) {
   const sizes = w.product_sizes;
   const wanted = w.sizes.map(norm);
   if (!sizes) {
-    return w.sizes.length ? w.sizes.map((s) => `<span class="chip want">${esc(s)}</span>`).join('') : '';
+    const chips = w.sizes.length ? w.sizes.map((s) => `<span class="chip want">${esc(s)}</span>`).join('') : '<span class="chip all">Tüm bedenler</span>';
+    return `<div class="chips">${chips}</div>`;
   }
   const chips = sizes.map((s) => {
-    const isWanted = wanted.includes(norm(s.name));
-    return `<span class="chip ${s.available ? 'in' : ''} ${isWanted ? 'want' : ''}" title="${s.available ? 'Stokta' : 'Stokta yok'}">${esc(s.name)}</span>`;
+    const cls = `chip ${s.available ? 'in' : 'out'} ${wanted.includes(norm(s.name)) ? 'want' : ''}`;
+    return w.mine
+      ? `<button type="button" class="${cls}" data-toggle="${w.id}" data-size="${esc(s.name)}" title="${s.available ? 'Stokta' : 'Stokta yok'} — takip etmek için dokun">${esc(s.name)}</button>`
+      : `<span class="${cls}">${esc(s.name)}</span>`;
   });
-  const missing = w.sizes.filter((s) => !sizes.some((x) => norm(x.name) === norm(s)));
-  for (const m of missing) chips.push(`<span class="chip missing want" title="Üründe bu beden görünmüyor">${esc(m)}?</span>`);
-  return chips.join('');
+  for (const m of w.sizes.filter((s) => !sizes.some((x) => norm(x.name) === norm(s)))) {
+    chips.push(`<span class="chip missing want" title="Üründe bu beden görünmüyor">${esc(m)}?</span>`);
+  }
+  if (!w.sizes.length) chips.unshift('<span class="chip all">Tümü</span>');
+  return `<div class="chips">${chips.join('')}</div>`;
+}
+
+function targetText(w) {
+  if (w.target_price) return `Hedef ${tl(w.target_price)}`;
+  if (w.target_percent) return `Hedef %${w.target_percent}${w.base_price ? ` (${tl(Math.round(w.base_price * (1 - w.target_percent / 100)))})` : ''}`;
+  return null;
+}
+
+function card(w) {
+  const off = w.list_price > w.price ? Math.round((1 - w.price / w.list_price) * 100) : 0;
+  const tags = [
+    `<span class="tag">${esc(w.site)}</span>`,
+    w.fast ? '<span class="tag fast">Hızlı</span>' : '',
+    w.store_stock ? '<span class="tag store">Mağaza</span>' : '',
+    w.paused ? '<span class="tag pause">Durduruldu</span>' : '',
+  ].join('');
+  const subParts = [w.color, tab === 'all' ? w.owner : null, targetText(w)].filter(Boolean);
+  const checking = !w.last_checked && !w.fail_count && !w.paused;
+  const notes = [];
+  if (checking) notes.push('<div class="note">İlk kontrol yapılıyor…</div>');
+  if (w.fail_count > 0 && w.last_error) notes.push(`<div class="note err">⚠ ${esc(w.last_error)}</div>`);
+  if (w.store_stock && w.stores) {
+    const wanted = w.sizes.map(norm);
+    const rel = w.stores.map((s) => ({ name: s.name, sizes: s.sizes.map((z) => z.name).filter((n) => !wanted.length || wanted.includes(norm(n))) })).filter((s) => s.sizes.length);
+    notes.push(rel.length
+      ? `<details class="stores"><summary>📍 ${rel.length} İstanbul mağazasında stokta ▾</summary><ul>${rel.map((s) => `<li><span>${esc(s.name)}</span><span>${esc(s.sizes.join(', '))}</span></li>`).join('')}</ul></details>`
+      : '<div class="note">📍 İstediğin beden şu an İstanbul mağazalarında yok</div>');
+  }
+  const acts = w.mine
+    ? `<div class="acts"><button class="btn ghost small" data-edit="${w.id}">Düzenle</button></div>`
+    : '';
+  return `<article class="card item ${w.paused ? 'paused' : ''}">
+    ${checking ? '<div class="shimmer"></div>' : ''}
+    <div class="item-top">
+      ${w.image ? `<a href="${esc(w.url)}" target="_blank" rel="noopener"><img class="thumb" src="${esc(w.image)}" alt="" loading="lazy" referrerpolicy="no-referrer"></a>` : '<div class="thumb ph">◇</div>'}
+      <div class="info">
+        <div class="site">${tags}</div>
+        <div class="name"><a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.title || w.url)}</a></div>
+        <div class="sub">${esc(subParts.join(' · '))}</div>
+        <div class="price-row">
+          ${w.price != null ? `<span class="price">${tl(w.price)}</span>` : ''}
+          ${off ? `<span class="old">${tl(w.list_price)}</span><span class="off">%${off}</span>` : ''}
+        </div>
+      </div>
+    </div>
+    ${sizeChips(w)}
+    ${w.last_checked ? sparkline(w.history, w.price) : ''}
+    ${notes.join('')}
+    <div class="item-foot"><span class="when">${w.paused ? 'Durduruldu' : w.last_checked ? `Son kontrol ${ago(w.last_checked)}` : 'Sırada'}</span>${acts}</div>
+  </article>`;
 }
 
 function renderList() {
-  document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  $('tabs').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
   const items = tab === 'mine' ? watches.filter((w) => w.mine) : watches;
+  $('count').textContent = items.length ? `${items.length} ürün` : '';
   if (!items.length) {
-    $('list').innerHTML = `<div class="empty">${tab === 'mine' ? 'Henüz takip ettiğin ürün yok.' : 'Henüz kimse ürün eklemedi.'}</div>`;
+    $('list').innerHTML = `<div class="card empty"><span class="serif">${tab === 'mine' ? 'Henüz takip yok' : 'Liste boş'}</span>${tab === 'mine' ? 'Yukarıya bir ürün linki yapıştırarak başla.' : 'Henüz kimse ürün eklemedi.'}</div>`;
     return;
   }
-  $('list').innerHTML = items.map((w) => {
-    const title = w.title ? `${w.title}${w.color ? ` · ${w.color}` : ''}` : w.url;
-    const wantText = w.sizes.length ? `Beden: ${w.sizes.join(', ')}` : 'Tüm bedenler';
-    const parts = [
-      esc(w.site),
-      tab === 'all' ? esc(w.owner) : null,
-      wantText,
-      w.target_price ? `Hedef: ${tl(w.target_price)}` : null,
-      ago(w.last_checked),
-    ].filter(Boolean);
-    const error = w.fail_count > 0 && w.last_error ? `<div class="err-line">⚠️ Son kontrol başarısız: ${esc(w.last_error)}</div>` : '';
-    return `<div class="item">
-      <div class="item-head">
-        <div>
-          <div class="item-title"><a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(title)}</a>${w.fast ? '<span class="tag fast">hızlı</span>' : ''}</div>
-          <div class="meta">${parts.join(' · ')}</div>
-        </div>
-        <div class="price">${tl(w.price)}</div>
-      </div>
-      <div class="chips">${sizeChips(w)}</div>
-      ${error}
-      ${w.mine ? `<div class="actions"><button class="link" data-del="${w.id}">Takibi bırak</button></div>` : ''}
-    </div>`;
-  }).join('');
-  document.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => removeWatch(Number(b.dataset.del))));
+  $('list').innerHTML = items.map(card).join('');
+  $('list').querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => toggleSize(Number(b.dataset.toggle), b.dataset.size)));
+  $('list').querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openEdit(Number(b.dataset.edit))));
 }
 
-async function removeWatch(id) {
-  if (!confirm('Bu ürünün takibini bırakmak istiyor musun?')) return;
-  try {
-    await api(`/api/watches/${id}?${contactQuery()}`, { method: 'DELETE' });
-    refresh();
-  } catch (err) { alert(err.message); }
+// Karttaki bedene dokununca takip edilen bedenlere eklenir/çıkarılır (kısa gecikmeyle kaydedilir)
+const pendingSizes = new Map();
+function toggleSize(id, size) {
+  const w = watches.find((x) => x.id === id);
+  if (!w) return;
+  const has = w.sizes.some((s) => norm(s) === norm(size));
+  w.sizes = has ? w.sizes.filter((s) => norm(s) !== norm(size)) : [...w.sizes, size];
+  renderList();
+  clearTimeout(pendingSizes.get(id));
+  pendingSizes.set(id, setTimeout(async () => {
+    try {
+      await patch(id, { sizes: w.sizes });
+      toast(w.sizes.length ? `Takip edilen bedenler: ${w.sizes.join(', ')}` : 'Tüm bedenler takip ediliyor');
+    } catch (err) { toast(err.message, true); refresh(); }
+  }, 700));
+}
+const patch = (id, body) => api(`/api/watches/${id}?${contactQuery()}`, { method: 'PATCH', body });
+
+// ---------- Düzenleme penceresi ----------
+function openSheet(html) {
+  const sheet = $('sheet'), scrim = $('scrim');
+  sheet.innerHTML = html;
+  sheet.classList.remove('hidden'); scrim.classList.remove('hidden');
+  requestAnimationFrame(() => { sheet.classList.add('show'); scrim.classList.add('show'); });
+}
+function closeSheet() {
+  const sheet = $('sheet'), scrim = $('scrim');
+  sheet.classList.remove('show'); scrim.classList.remove('show');
+  setTimeout(() => { sheet.classList.add('hidden'); scrim.classList.add('hidden'); }, 220);
+}
+$('scrim').addEventListener('click', closeSheet);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
+function openEdit(id) {
+  const w = watches.find((x) => x.id === id);
+  if (!w) return;
+  let mode = w.target_percent ? 'pct' : 'tl';
+  const current = w.target_percent ? String(w.target_percent) : w.target_price ? String(w.target_price).replace('.', ',') : '';
+  openSheet(`
+    <h3 class="serif">${esc(w.title || 'Takibi düzenle')}</h3>
+    <div class="sub">${esc([w.site, w.color].filter(Boolean).join(' · '))}</div>
+    <div class="stack">
+      <label class="field"><span>Hedef</span>
+        <div class="target-row"><input class="input" id="e-target" inputmode="decimal" value="${esc(current)}" placeholder="Boşsa her indirimde haber ver">
+        <div class="seg" id="e-mode"><button type="button" data-mode="tl" class="${mode === 'tl' ? 'on' : ''}">TL</button><button type="button" data-mode="pct" class="${mode === 'pct' ? 'on' : ''}">%</button></div></div>
+      </label>
+      <label class="toggle"><input type="checkbox" id="e-fast" ${w.fast ? 'checked' : ''}><i class="sw"></i><div><b>Hızlı takip</b><small>5 dakikada bir kontrol</small></div></label>
+      ${w.store_stock_supported ? `<label class="toggle"><input type="checkbox" id="e-store" ${w.store_stock ? 'checked' : ''}><i class="sw"></i><div><b>İstanbul mağazaları</b><small>Beden bir mağazada stoğa girince haber ver</small></div></label>` : ''}
+      <label class="toggle"><input type="checkbox" id="e-paused" ${w.paused ? 'checked' : ''}><i class="sw"></i><div><b>Takibi durdur</b><small>Silmeden bildirimleri beklet</small></div></label>
+      <div class="hint">Bedenleri kartın üzerindeki beden düğmelerine dokunarak değiştirebilirsin.</div>
+    </div>
+    <div class="row-btns">
+      <button class="btn primary" id="e-save">Kaydet</button>
+      <button class="btn" id="e-cancel">Vazgeç</button>
+    </div>
+    <div class="row-btns" style="margin-top:10px"><button class="btn danger" id="e-delete">Takibi bırak</button></div>
+  `);
+  $('e-mode').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    mode = b.dataset.mode;
+    $('e-mode').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+  });
+  $('e-cancel').addEventListener('click', closeSheet);
+  $('e-save').addEventListener('click', async () => {
+    const body = { fast: $('e-fast').checked, paused: $('e-paused').checked };
+    const target = targetValue($('e-target').value, mode);
+    const before = targetValue(current, w.target_percent ? 'pct' : 'tl');
+    if (target !== before) body.target = target;
+    if ($('e-store') && $('e-store').checked !== w.store_stock) body.store_stock = $('e-store').checked;
+    try {
+      $('e-save').disabled = true;
+      await patch(id, body);
+      closeSheet();
+      toast('Kaydedildi');
+      refresh();
+    } catch (err) { toast(err.message, true); $('e-save').disabled = false; }
+  });
+  $('e-delete').addEventListener('click', async () => {
+    if (!confirm('Bu ürünün takibini bırakmak istiyor musun?')) return;
+    try {
+      await api(`/api/watches/${id}?${contactQuery()}`, { method: 'DELETE' });
+      closeSheet();
+      toast('Takip bırakıldı');
+      refresh();
+    } catch (err) { toast(err.message, true); }
+  });
 }
 
-function renderBanner() {
-  const b = $('banner');
+// ---------- Durum ----------
+function renderStatus() {
   const s = statusInfo;
-  let text = '';
-  if (s?.dispatchError) text = `Kontrol programı başlatılamıyor: ${s.dispatchError}`;
-  else if (watches.length && s?.lastRun && Date.now() - s.lastRun > 30 * 60000) text = `Son kontrol ${ago(s.lastRun)} yapıldı, kontroller aksıyor olabilir.`;
-  b.textContent = text;
-  b.classList.toggle('hidden', !text);
+  let text = s?.lastRun ? `Son kontrol ${ago(s.lastRun)}` : 'Kontroller başlıyor';
+  let bad = false;
+  if (s?.dispatchError) { text = 'Kontroller başlatılamıyor'; bad = true; }
+  else if (watches.some((w) => !w.paused) && s?.lastRun && Date.now() - s.lastRun > 30 * 60000) { text = `Kontroller aksıyor · ${ago(s.lastRun)}`; bad = true; }
+  $('status-text').textContent = text;
+  $('status').classList.toggle('bad', bad);
+  $('status').title = s?.dispatchError || '';
 }
 
 async function refresh() {
@@ -380,15 +749,27 @@ async function refresh() {
     const [list, status] = await Promise.all([api(`/api/watches?${contactQuery()}`), api('/api/status')]);
     watches = list.watches;
     statusInfo = status;
-    showApp();
     renderList();
-    renderBanner();
+    renderStatus();
+    // İlk kontrolü bekleyen kendi ürünün varsa daha sık yenile
+    clearTimeout(pollTimer);
+    const waiting = watches.some((w) => w.mine && !w.last_checked && !w.paused && !w.fail_count);
+    pollTimer = setTimeout(() => { if (!document.hidden) refresh(); }, waiting ? 8000 : 60000);
   } catch {}
 }
 
-renderProfile();
-refresh();
-setInterval(() => { if (!document.hidden && !$('app').classList.contains('hidden')) refresh(); }, 60000);
+async function start() {
+  if (!hasProfile()) { openProfile(); return; }
+  renderAvatar();
+  show('app');
+  renderSizePicker();
+  await refresh();
+}
+
+// Oturum var mı? Yoksa giriş ekranı
+renderSizePicker();
+api('/api/status').then(start).catch(() => {});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('app').classList.contains('hidden')) refresh(); });
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // Pull&Bear, Bershka, Stradivarius, Massimo Dutti, Oysho, Lefties, Zara Home: hepsi aynı altyapı
-import { explainFailure, open, poll, sleep, withPage } from '../browser.mjs';
+import { explainFailure, ogImage, open, poll, sleep, withPage } from '../browser.mjs';
 
 const BRANDS = {
   'pullandbear.com': 'Pull&Bear',
@@ -62,10 +62,13 @@ export default {
         bySize.set(name, seen ? { ...seen, available: seen.available || size.available } : size);
       }
       const sizes = [...bySize.values()];
+      const oldPrices = own.concat(color.sizes ?? []).map((s) => Number(s.oldPrice) / 100).filter((p) => p > 0);
       return {
         title: product.name,
         color: color.name,
+        image: await ogImage(page),
         price: Math.min(...sizes.map((s) => s.price).filter((p) => p > 0)),
+        listPrice: oldPrices.length ? Math.max(...oldPrices) : null,
         sizes,
       };
     });

@@ -43,7 +43,8 @@ jobs:
             ID=$(npx wrangler d1 list --json | node -e 'const l=JSON.parse(require("fs").readFileSync(0));console.log(l.find(d=>d.name==="urun-takip")?.uuid??"")')
           fi
           sed -i "s/^database_id = .*/database_id = \"$ID\"/" wrangler.toml
-          npx wrangler d1 execute urun-takip --remote --file=schema.sql
+          # Tablolar ve sonraki güncellemeler (worker/migrations) sırayla uygulanır
+          npx wrangler d1 migrations apply urun-takip --remote
 
       - name: Paneli yükle
         run: npx wrangler deploy

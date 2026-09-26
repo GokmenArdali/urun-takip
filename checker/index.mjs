@@ -10,7 +10,7 @@ import { adapterFor, checkProduct } from './sites/index.mjs';
 const API_URL = (process.env.API_URL ?? '').trim().replace(/\/$/, '');
 const API_TOKEN = (process.env.API_TOKEN ?? '').trim();
 const CONCURRENCY = Number(process.env.CONCURRENCY || 3);
-const PRODUCT_TIMEOUT_MS = 75_000;
+const PRODUCT_TIMEOUT_MS = 90_000;
 // Bir çalıştırma çok uzarsa yeni ürün başlatma; kalanlar sonraki çalıştırmada
 const MAX_RUN_MS = 12 * 60_000;
 
@@ -34,16 +34,11 @@ function withTimeout(promise, ms) {
 }
 
 async function runPool(items, limit, fn) {
-  const results = [];
   let next = 0;
   const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i]);
-    }
+    while (next < items.length) await fn(items[next++]);
   });
   await Promise.all(workers);
-  return results;
 }
 
 async function main() {
@@ -68,23 +63,35 @@ async function main() {
       let data = null;
       let error = null;
       try {
-        data = await withTimeout(checkProduct(job.url, { browser }), PRODUCT_TIMEOUT_MS);
+        data = await withTimeout(checkProduct(job.url, { browser, storeStock: job.store_stock }), PRODUCT_TIMEOUT_MS);
       } catch (e) {
         error = String(e.message || e).slice(0, 200);
       }
       const secs = ((Date.now() - t0) / 1000).toFixed(1);
 
-      const product = { url: job.url, ...(data ?? { title: job.title, color: job.color, sizes: job.sizes ?? [] }) };
+      const product = {
+        url: job.url,
+        ...(data ?? { title: job.title, color: job.color, image: job.image, sizes: job.sizes ?? [] }),
+      };
       const watches = [];
       for (const watch of job.watches) {
-        const { events, state } = data ? evaluate(watch, data) : evaluateFailure(watch, job.fail_count + 1, error);
-        for (const event of events) outbox.add(watch, product, event);
-        watches.push({ id: watch.id, state });
+        const { events, state, pause } = data
+          ? evaluate(watch, data, { history: job.history })
+          : evaluateFailure(watch, job.fail_count + 1, error);
+        for (const event of events) {
+          outbox.add(watch, product, event);
+          // Tek tek okunamayan ürünler de yöneticiye bildirilir (site değişmiş olabilir)
+          if (event.type === 'broken') {
+            outbox.addAdmin(`Okunamıyor: ${site} · ${product.title ?? job.url}`, [job.url, `Hata: ${event.error}`]);
+          }
+        }
+        watches.push({ id: watch.id, state, pause });
       }
 
       if (data) {
         const stock = data.sizes.filter((s) => s.available).length;
-        console.log(`✓ [${site}] #${job.id} ${data.title} · ${data.price} TL · ${stock}/${data.sizes.length} beden stokta · ${secs} sn`);
+        const stores = data.stores ? ` · ${data.stores.length} mağaza` : '';
+        console.log(`✓ [${site}] #${job.id} ${data.title} · ${data.price} TL · ${stock}/${data.sizes.length} beden stokta${stores} · ${secs} sn`);
       } else {
         console.log(`✗ [${site}] #${job.id} ${error} · ${secs} sn`);
       }
@@ -94,8 +101,11 @@ async function main() {
         error,
         title: data?.title ?? null,
         color: data?.color ?? null,
+        image: data?.image ?? null,
         price: data?.price ?? null,
+        list_price: data?.listPrice ?? null,
         sizes: data?.sizes ?? null,
+        stores: data?.stores ?? null,
         watches,
       });
     });
@@ -103,9 +113,21 @@ async function main() {
     await browser.close();
   }
 
+  const { alerts = [] } = await api('/api/checker/results', { results });
+  for (const a of alerts) {
+    if (a.type === 'down') {
+      outbox.addAdmin(`${a.site} okunamıyor${a.repeat ? ' (hâlâ)' : ''}`, [
+        `${a.site} sitesindeki ${a.count} ürünün hiçbiri üst üste birkaç kez okunamadı.`,
+        `Son hata: ${a.error ?? 'bilinmiyor'}`,
+        'Site tasarımını değiştirmiş olabilir; checker/sites altındaki okuyucunun güncellenmesi gerekebilir.',
+      ]);
+    } else {
+      outbox.addAdmin(`${a.site} tekrar okunuyor`, [`${a.site} ürünleri yeniden sorunsuz okunuyor.`]);
+    }
+  }
+
   const failedNotifications = await outbox.flush();
   console.log(`${outbox.size} bildirim hazırlandı, ${failedNotifications} tanesi gönderilemedi`);
-  await api('/api/checker/results', { results });
   console.log(`Bitti: ${results.length} ürün, ${((Date.now() - started) / 1000).toFixed(0)} sn`);
   if (failedNotifications) process.exitCode = 1; // GitHub'da kırmızı görünsün ki fark edilsin
 }

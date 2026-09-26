@@ -1,4 +1,4 @@
-import { explainFailure, open, poll, withPage } from '../browser.mjs';
+import { explainFailure, ogImage, open, poll, withPage } from '../browser.mjs';
 
 const prop = (variant, predicate) => variant.properties?.find(predicate)?.valueObject?.actualValue ?? null;
 const isColor = (p) => /renk|color/i.test(p.name);
@@ -35,6 +35,7 @@ export default {
       return {
         title: [product.brand, product.name].filter(Boolean).join(' '),
         color,
+        image: await ogImage(page),
         price,
         sizes: sizes.length ? sizes : [{ name: 'Standart', available: !!product.isInStock, price }],
       };

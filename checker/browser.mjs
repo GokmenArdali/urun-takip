@@ -28,6 +28,9 @@ export function createBrowser() {
             locale: 'tr-TR',
             timezoneId: 'Europe/Istanbul',
             viewport: { width: 1366, height: 768 },
+            // Mağaza stoğu gibi konuma göre çalışan özellikler için İstanbul
+            geolocation: { latitude: 41.0082, longitude: 28.9784 },
+            permissions: ['geolocation'],
           });
           await ctx.route('**/*', (route) =>
             BLOCKED_TYPES.has(route.request().resourceType()) ? route.abort() : route.continue(),
@@ -77,6 +80,19 @@ export async function withPage(browser, url, fn) {
 export async function open(page, url) {
   const res = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
   if (res?.status() === 404 || res?.status() === 410) throw new Error('Ürün sayfası bulunamadı (kaldırılmış olabilir)');
+}
+
+export async function ogImage(page) {
+  return page
+    .evaluate(() => document.querySelector('meta[property="og:image"]')?.content || null)
+    .catch(() => null);
+}
+
+// Sayfadaki schema.org ürün bloklarının metinleri
+export async function ldJsonTexts(page) {
+  return page
+    .$$eval('script[type="application/ld+json"]', (els) => els.map((e) => e.textContent))
+    .catch(() => []);
 }
 
 // Veri okunamadığında nedenini tahmin eder
