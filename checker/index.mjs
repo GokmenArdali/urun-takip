@@ -46,7 +46,10 @@ async function runPool(items, limit, fn) {
 }
 
 async function main() {
-  if (!API_URL || !API_TOKEN) throw new Error('API_URL ve API_TOKEN ayarlanmalı');
+  if (!API_URL || !API_TOKEN) {
+    console.log('API_URL / API_TOKEN henüz ayarlanmamış, kurulum tamamlanınca kontroller başlayacak (KURULUM.md).');
+    return;
+  }
   const started = Date.now();
   const { jobs } = await api(`/api/checker/jobs${process.env.CHECK_ALL === '1' ? '?all=1' : ''}`);
   console.log(`${jobs.length} ürün kontrol edilecek`);
