@@ -16,7 +16,7 @@ Tamamen ücretsiz servislerle çalışır, bilgisayarının açık olması gerek
 ## Özellikler
 
 - **Beden takibi:** Zara, Pull&Bear, Bershka, Stradivarius, Massimo Dutti, Oysho, Lefties, Zara Home, Mango, H&M, Trendyol,
-  Hepsiburada, Boyner, Beymen, FashFed, Koton, LC Waikiki, DeFacto, Nike, Adidas. Diğer sitelerde fiyat ve genel stok.
+  Hepsiburada, Boyner, Beymen, FashFed, Koton, LC Waikiki, DeFacto, Nike, Adidas, Mavi. Diğer sitelerde fiyat ve genel stok.
 - **Hedef:** TL (ör. `1500`) ya da yüzde (ör. `%30`, takibe alındığı andaki fiyata göre). Boşsa her indirimde bildirim.
 - **Fiyat geçmişi:** Panelde 60 günlük grafik; fiyat düşüş bildiriminde "son 30 günün en düşüğü" ya da
   "indirimden önce fiyat şişirilmiş" uyarısı.

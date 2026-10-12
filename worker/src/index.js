@@ -28,6 +28,7 @@ const SITES = [
   ['fashfed.com', 'FashFed'],
   ['koton.com', 'Koton'],
   ['mango.com', 'Mango'],
+  ['mavi.com', 'Mavi'],
   ['boyner.com.tr', 'Boyner'],
   ['lcw.com', 'LC Waikiki'],
   ['nike.com', 'Nike'],

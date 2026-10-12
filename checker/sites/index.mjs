@@ -9,12 +9,13 @@ import hm from './hm.mjs';
 import inditex from './inditex.mjs';
 import lcw from './lcw.mjs';
 import mango from './mango.mjs';
+import mavi from './mavi.mjs';
 import nike from './nike.mjs';
 import trendyol from './trendyol.mjs';
 import zara from './zara.mjs';
 
 // generic en sonda: tanınmayan siteler için
-const ADAPTERS = [zara, inditex, trendyol, hepsiburada, akinon, mango, boyner, lcw, nike, hm, defacto, adidas, beymen, generic];
+const ADAPTERS = [zara, inditex, trendyol, hepsiburada, akinon, mango, mavi, boyner, lcw, nike, hm, defacto, adidas, beymen, generic];
 
 export function adapterFor(url) {
   const host = new URL(url).hostname.toLowerCase();
